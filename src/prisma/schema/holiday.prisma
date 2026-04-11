@@ -1,0 +1,26 @@
+model Holiday {
+  id          String      @id @default(cuid())
+  
+  name        String
+  
+  day         Int
+  month       Int
+
+  year        Int?        
+  
+  duration    Float       @default(1.0)
+  
+  type        HolidayType @default(PUBLIC)
+  
+  description String?     @db.Text
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([year, month])
+}
+
+enum HolidayType {
+  PUBLIC    
+  CORPORATE 
+}

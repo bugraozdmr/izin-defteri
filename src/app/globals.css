@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@media print {
+	body * {
+		visibility: hidden;
+	}
+
+	#print-area,
+	#print-area * {
+		visibility: visible;
+	}
+
+	#print-area {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+	}
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+
+/* Homepage animasyonları */
+.reveal {
+	opacity: 0;
+	transform: translateY(16px);
+	animation: rise 650ms ease forwards;
+}
+
+.reveal-1 {
+	animation-delay: 70ms;
+}
+
+.reveal-2 {
+	animation-delay: 170ms;
+}
+
+.reveal-3 {
+	animation-delay: 250ms;
+}
+
+.reveal-4 {
+	animation-delay: 330ms;
+}
+
+.floating-orb {
+	animation: float 9s ease-in-out infinite;
+}
+
+.floating-orb-delay {
+	animation: float 11s ease-in-out infinite;
+	animation-delay: 0.8s;
+}
+
+@keyframes rise {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes float {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+
+	50% {
+		transform: translateY(-16px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.reveal,
+	.floating-orb,
+	.floating-orb-delay {
+		animation: none;
+		opacity: 1;
+		transform: none;
+	}
+}

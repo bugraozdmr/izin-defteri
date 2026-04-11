@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      // Proje kök dizinindeki src klasörüne alias tanımlaması
+      "@/*": ["./src/*"]
     }
   },
   "include": [
