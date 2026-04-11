@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { holidayService } from "../service/holiday.service";
-import { Prisma } from "@prisma/client";
+// import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export async function getUpcomingHolidaysAction(fromDateStr?: string) {
   try {
