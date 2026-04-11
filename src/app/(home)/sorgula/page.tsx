@@ -37,10 +37,12 @@ export default function QueryLeaveRequestsPage() {
 
   return (
     <div className="relative mx-auto mt-24 min-h-[calc(100vh-140px)] max-w-7xl overflow-hidden px-4 py-10 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute inset-0 -z-10">
+      { 
+      /* <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="floating-orb absolute -left-20 top-16 h-64 w-64 rounded-full bg-sky-200/35 blur-3xl dark:bg-sky-800/30" />
         <div className="floating-orb-delay absolute -right-20 top-28 h-64 w-64 rounded-full bg-emerald-200/30 blur-3xl dark:bg-emerald-800/25" />
-      </div>
+      </div> */ 
+      }
 
       <div className="reveal reveal-1 mb-8">
         <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/80 px-4 py-1.5 text-xs font-semibold text-sky-800 shadow-sm backdrop-blur dark:border-sky-900 dark:bg-slate-900/65 dark:text-sky-200">

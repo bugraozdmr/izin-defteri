@@ -1,18 +1,42 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   BadgeCheck,
-  CalendarClock,
   CheckCircle2,
   ClipboardEdit,
   Download,
-  FileText,
   MousePointer2,
   Search,
-  ShieldCheck,
+  CalendarDays,
 } from "lucide-react";
+import { Holiday } from "@/features/holiday/types/holiday";
+import { getClosestUpcomingHolidayAction } from "@/features/holiday/actions/holiday.action";
 
 export default function HomePage() {
+  const [upcomingHoliday, setUpcomingHoliday] = useState<Holiday | null>(null);
+  const [isLoadingHoliday, setIsLoadingHoliday] = useState(true);
+
+  useEffect(() => {
+    const fetchUpcoming = async () => {
+      try {
+        setIsLoadingHoliday(true);
+        const res = await getClosestUpcomingHolidayAction();
+        if (res.success && res.data) {
+          setUpcomingHoliday(res.data as unknown as Holiday);
+        }
+      } catch (error) {
+        console.error("Yaklaşan tatil çekilemedi", error);
+      } finally {
+        setIsLoadingHoliday(false);
+      }
+    };
+
+    fetchUpcoming();
+  }, []);
+
   const steps = [
     {
       step: "01",
@@ -42,8 +66,14 @@ export default function HomePage() {
     },
   ];
 
+  const formatHolidayDate = (day: number, month: number) => {
+    const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+    return `${day} ${monthNames[month - 1]}`;
+  };
+
   return (
     <div className="relative overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_38%,#f4f8ff_100%)] transition-colors duration-300 dark:bg-[linear-gradient(180deg,#020617_0%,#0b1220_42%,#09111e_100%)] pt-24">
+      
       <div className="pointer-events-none absolute inset-0">
         <div className="floating-orb absolute -left-24 top-10 h-72 w-72 rounded-full bg-sky-200/45 blur-3xl dark:bg-sky-800/35" />
         <div className="floating-orb-delay absolute -right-16 top-40 h-64 w-64 rounded-full bg-amber-200/45 blur-3xl dark:bg-amber-700/30" />
@@ -53,8 +83,23 @@ export default function HomePage() {
       <section className="relative mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="mx-auto max-w-4xl text-center reveal reveal-1">
           <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/80 bg-white/80 px-4 py-1.5 text-xs font-semibold text-sky-800 shadow-sm backdrop-blur dark:border-sky-900 dark:bg-slate-900/65 dark:text-sky-200">
-            <BadgeCheck className="h-3.5 w-3.5" />
-            Dijital İzin
+            <CalendarDays className="h-4 w-4 shrink-0 text-sky-500 dark:text-sky-400" />
+              {isLoadingHoliday ? (
+                <span className="animate-pulse">Yaklaşan tatil kontrol ediliyor...</span>
+              ) : upcomingHoliday ? (
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="font-medium hidden sm:inline">Yaklaşan Tatil:</span>
+                  <span className="font-bold">{upcomingHoliday.name}</span>
+                  <span className="inline-flex items-center rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:bg-sky-900 dark:text-sky-300">
+                    {formatHolidayDate(upcomingHoliday.day, upcomingHoliday.month)}
+                  </span>
+                  <span className="hidden sm:inline-flex items-center rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    {upcomingHoliday.duration === 0.5 ? "Yarım Gün" : "Tam Gün"}
+                  </span>
+                </div>
+              ) : (
+                <span>Yakın zamanda resmi tatil bulunmuyor.</span>
+              )}
           </div>
 
           <h1 className="mt-5 text-balance text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl lg:text-5xl">
@@ -81,8 +126,6 @@ export default function HomePage() {
               <Search className="h-4 w-4" />
             </Link>
           </div>
-
-          
         </div>
 
         <div className="relative mt-12 lg:mt-14 reveal reveal-3">
@@ -170,7 +213,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

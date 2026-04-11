@@ -11,21 +11,6 @@ export const holidayRepository = {
     });
   },
 
-  async findByYear(year: number) {
-    return await db.holiday.findMany({
-      where: {
-        OR: [
-          { year: year },
-          { year: null },
-        ],
-      },
-      orderBy: [
-        { month: "asc" },
-        { day: "asc" },
-      ],
-    });
-  },
-
   async findBetweenDates(startDate: Date, endDate: Date) {
     const startYear = startDate.getFullYear();
     const endYear = endDate.getFullYear();

@@ -69,10 +69,11 @@ export default function CreateLeaveRequestPage() {
 
   return (
     <div className="relative mx-auto mt-24 min-h-[calc(100vh-140px)] max-w-7xl overflow-hidden px-4 py-10 sm:px-6 lg:px-8">
+      { /*
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="floating-orb absolute -left-20 top-20 h-72 w-72 rounded-full bg-cyan-200/35 blur-3xl dark:bg-cyan-800/25" />
         <div className="floating-orb-delay absolute -right-16 top-32 h-64 w-64 rounded-full bg-amber-200/30 blur-3xl dark:bg-amber-800/20" />
-      </div>
+      </div> */ }
 
       <div className="reveal reveal-1 mb-8">
         <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-white/80 px-4 py-1.5 text-xs font-semibold text-cyan-800 shadow-sm backdrop-blur dark:border-cyan-900 dark:bg-slate-900/70 dark:text-cyan-200">

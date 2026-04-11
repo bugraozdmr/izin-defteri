@@ -4,9 +4,20 @@ import { revalidatePath } from "next/cache";
 import { holidayService } from "../service/holiday.service";
 import { Prisma } from "@prisma/client";
 
-export async function getHolidaysAction(year: number) {
+export async function getUpcomingHolidaysAction(fromDateStr?: string) {
   try {
-    const holidays = await holidayService.getHolidaysByYear(year);
+    const fromDate = fromDateStr ? new Date(fromDateStr) : new Date();
+    const holidays = await holidayService.getUpcomingHolidays(fromDate);
+    return { success: true, data: holidays };
+  } catch (error) {
+    console.error("Yaklaşan tatiller çekilirken hata:", error);
+    return { success: false, message: "Yaklaşan tatiller listelenemedi." };
+  }
+}
+
+export async function getAllHolidaysAction() {
+  try {
+    const holidays = await holidayService.getAllHolidays();
     return { success: true, data: holidays };
   } catch (error) {
     console.error("Tatiller çekilirken hata:", error);
@@ -19,6 +30,7 @@ export async function createHolidayAction(data: Prisma.HolidayCreateInput) {
     const result = await holidayService.createHoliday(data);
     
     revalidatePath("/resmi-tatiller");
+    revalidatePath("/admin/tatiller");
     
     return { success: true, data: result };
   } catch (error) {
@@ -32,6 +44,7 @@ export async function updateHolidayAction(id: string, data: Prisma.HolidayUpdate
     const result = await holidayService.updateHoliday(id, data);
     
     revalidatePath("/resmi-tatiller");
+    revalidatePath("/admin/tatiller");
     
     return { success: true, data: result };
   } catch (error) {
@@ -45,11 +58,23 @@ export async function deleteHolidayAction(id: string) {
     await holidayService.deleteHoliday(id);
     
     revalidatePath("/resmi-tatiller");
+    revalidatePath("/admin/tatiller");
     
     return { success: true };
   } catch (error) {
     console.error("Silme hatası:", error);
     return { success: false, message: "Silme işlemi yapılamadı." };
+  }
+}
+
+export async function getClosestUpcomingHolidayAction(fromDateStr?: string) {
+  try {
+    const fromDate = fromDateStr ? new Date(fromDateStr) : new Date();
+    const closestHoliday = await holidayService.getClosestUpcomingHoliday(fromDate);
+    return { success: true, data: closestHoliday };
+  } catch (error) {
+    console.error("En yakın tatil çekilirken hata:", error);
+    return { success: false, message: "En yakın tatil bulunamadı." };
   }
 }
 
@@ -61,6 +86,7 @@ export async function calculateHolidaysAction(startDate: string, endDate: string
     const count = await holidayService.calculateTotalHolidayDays(start, end);
     return { success: true, count };
   } catch (error) {
+    console.error("Hesaplama hatası:", error);
     return { success: false, count: 0 };
   }
 }

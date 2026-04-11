@@ -24,7 +24,7 @@ export default function Navbar() {
 
     const navLinks = [
         { href: "/sorgula", label: "Sorgula" },
-        { href: "/resmi-tatiller", label: "Resmi Tatiller" },
+        { href: "/tatiller", label: "Tatiller" },
         { href: "/kartlar", label: "Kartlar" },
         { href: "/izin-talebi-olustur", label: "İzin Formu Oluştur" },
     ];
