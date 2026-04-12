@@ -1,75 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  BadgeCheck,
   CheckCircle2,
-  ClipboardEdit,
-  Download,
-  MousePointer2,
   Search,
   CalendarDays,
 } from "lucide-react";
-import { Holiday } from "@/features/holiday/types/holiday";
-import { getClosestUpcomingHolidayAction } from "@/features/holiday/actions/holiday.action";
+
+import { STEPS } from "@/constants/constants";
+import { formatHolidayDate } from "@/utils/helpers";
+import { useHome } from "@/hooks/useHome";
 
 export default function HomePage() {
-  const [upcomingHoliday, setUpcomingHoliday] = useState<Holiday | null>(null);
-  const [isLoadingHoliday, setIsLoadingHoliday] = useState(true);
-
-  useEffect(() => {
-    const fetchUpcoming = async () => {
-      try {
-        setIsLoadingHoliday(true);
-        const res = await getClosestUpcomingHolidayAction();
-        if (res.success && res.data) {
-          setUpcomingHoliday(res.data as unknown as Holiday);
-        }
-      } catch (error) {
-        console.error("Yaklaşan tatil çekilemedi", error);
-      } finally {
-        setIsLoadingHoliday(false);
-      }
-    };
-
-    fetchUpcoming();
-  }, []);
-
-  const steps = [
-    {
-      step: "01",
-      title: "Talep Başlat",
-      desc: "Sistem üzerinden yeni izin formu oluşturma ekranına geçiş yapın.",
-      icon: MousePointer2,
-      link: "/izin-talebi-olustur",
-      buttonText: "Forma Git",
-      accent: "from-sky-500 to-cyan-500",
-      bg: "bg-sky-50/80 text-sky-700 ring-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:ring-sky-800/70",
-    },
-    {
-      step: "02",
-      title: "Veri Girişi",
-      desc: "İzin türü, başlangıç ve bitiş tarihlerini sisteme tanımlayın.",
-      icon: ClipboardEdit,
-      accent: "from-emerald-500 to-teal-500",
-      bg: "bg-emerald-50/80 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-800/70",
-    },
-    {
-      step: "03",
-      title: "PDF Çıktı",
-      desc: "Sistem tarafından hazırlanan resmi dilekçeyi PDF olarak indirin.",
-      icon: Download,
-      accent: "from-amber-500 to-orange-500",
-      bg: "bg-amber-50/80 text-amber-700 ring-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:ring-amber-800/70",
-    },
-  ];
-
-  const formatHolidayDate = (day: number, month: number) => {
-    const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-    return `${day} ${monthNames[month - 1]}`;
-  };
+  const { upcomingHoliday, isLoadingHoliday } = useHome();
 
   return (
     <div className="relative overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_38%,#f4f8ff_100%)] transition-colors duration-300 dark:bg-[linear-gradient(180deg,#020617_0%,#0b1220_42%,#09111e_100%)] pt-24">
@@ -132,7 +76,7 @@ export default function HomePage() {
           <div className="pointer-events-none absolute left-0 right-0 top-8 hidden h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-slate-700 md:block" />
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {steps.map((step, index) => (
+            {STEPS.map((step, index) => (
               <div key={step.step} className="relative">
                 <div className="absolute left-1/2 top-8 hidden -translate-x-1/2 md:block">
                   <div className="h-3 w-3 rounded-full bg-sky-500 ring-4 ring-white dark:bg-sky-400 dark:ring-slate-950" />
@@ -176,7 +120,7 @@ export default function HomePage() {
                   )}
                 </div>
 
-                {index !== steps.length - 1 && (
+                {index !== STEPS.length - 1 && (
                   <div className="mx-auto mt-3 flex w-full items-center justify-center md:hidden">
                     <div className="h-8 w-px bg-slate-300 dark:bg-slate-700" />
                   </div>

@@ -5,15 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { 
-  LayoutDashboard, CalendarDays, Users, ClipboardList, 
-  LogOut, ChevronLeft, ChevronRight, X, Sun, Moon 
+  LayoutDashboard, CalendarDays, ClipboardList, 
+  LogOut, ChevronLeft, ChevronRight, X, Sun, Moon, 
+  CircleQuestionMark
 } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 
 const menuItems = [
   { name: "Genel Bakış", href: "/admin", icon: LayoutDashboard },
   { name: "İzin Talepleri", href: "/admin/talepler", icon: ClipboardList },
-  { name: "Personel Listesi", href: "/admin/personeller", icon: Users },
+  { name: "Sorular", href: "/admin/sorular", icon: CircleQuestionMark },
   { name: "Tatil Takvimi", href: "/admin/tatiller", icon: CalendarDays },
 ];
 

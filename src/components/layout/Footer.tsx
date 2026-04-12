@@ -7,7 +7,7 @@ export default function Footer() {
     { href: "/sorgula", label: "Sorgula" },
     { href: "/izin-talebi-olustur", label: "Talep Formu" },
     { href: "/resmi-tatiller", label: "Resmi Tatiller" },
-    { href: "/kartlar", label: "Kartlar" },
+    { href: "/sss", label: "Sık Sorulan Sorular" },
   ];
 
   return (

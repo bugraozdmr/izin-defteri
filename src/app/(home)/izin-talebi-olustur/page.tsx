@@ -76,10 +76,6 @@ export default function CreateLeaveRequestPage() {
       </div> */ }
 
       <div className="reveal reveal-1 mb-8">
-        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-white/80 px-4 py-1.5 text-xs font-semibold text-cyan-800 shadow-sm backdrop-blur dark:border-cyan-900 dark:bg-slate-900/70 dark:text-cyan-200">
-          <Sparkles className="h-3.5 w-3.5" />
-          Dijital Form Üretimi
-        </div>
 
         <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
           İzin <span className="bg-gradient-to-r from-sky-600 to-cyan-500 bg-clip-text text-transparent">Talebi</span> Oluştur

@@ -16,8 +16,8 @@ export default function HolidayCard({ holiday, isClosest, formatFriendlyDate }: 
     <div
       className={`group relative flex flex-col overflow-hidden rounded-3xl border p-6 transition-all hover:-translate-y-1 hover:shadow-xl ${
         isClosest
-          ? "border-sky-200 bg-gradient-to-b from-sky-50 to-white shadow-sky-100 dark:border-sky-800/60 dark:from-sky-950/40 dark:to-slate-900 dark:shadow-sky-900/20"
-          : "border-slate-200 bg-white/80 shadow-slate-100 backdrop-blur dark:border-slate-800 dark:bg-slate-900/60 dark:shadow-none"
+          ? "border-sky-200 bg-gradient-to-b from-sky-50 to-white shadow-[0_14px_36px_-24px_rgba(2,6,23,0.5)] hover:shadow-[0_22px_42px_-22px_rgba(14,116,144,0.45)] dark:border-sky-800/60 dark:from-sky-950/40 dark:to-slate-900 dark:shadow-sky-900/20 dark:hover:shadow-sky-800/50"
+          : "border-slate-200 bg-white/80 shadow-[0_14px_36px_-24px_rgba(2,6,23,0.5)] hover:shadow-[0_22px_42px_-22px_rgba(14,116,144,0.45)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/60 dark:shadow-slate-900/20 dark:hover:shadow-slate-800/40"
       }`}
     >
       <div className="mb-4 flex items-center justify-between">
