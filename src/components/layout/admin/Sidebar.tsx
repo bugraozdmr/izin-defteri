@@ -15,7 +15,7 @@ import { logoutAction } from "@/features/auth/actions/auth.action";
 
 const menuItems = [
   { name: "Genel Bakış", href: "/admin", icon: LayoutDashboard },
-  { name: "İzin Talepleri", href: "/admin/talepler", icon: ClipboardList },
+  { name: "İzinler", href: "/admin/izinler", icon: ClipboardList },
   { name: "Sorular", href: "/admin/sorular", icon: CircleQuestionMark },
   { name: "Tatil Takvimi", href: "/admin/tatiller", icon: CalendarDays },
 ];

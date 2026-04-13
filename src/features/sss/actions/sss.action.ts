@@ -29,7 +29,7 @@ export async function createSssAction(data: Prisma.SSSCreateInput) {
   try {
     const result = await sssService.createSSS(data);
     
-    revalidateTag("sss-data");
+    revalidateTag("sss-data", "max");
     
     return { success: true, data: result };
   } catch (error) {
@@ -42,7 +42,7 @@ export async function updateSssAction(id: string, data: Prisma.SSSUpdateInput) {
   try {
     const result = await sssService.updateSSS(id, data);
     
-    revalidateTag("sss-data");
+    revalidateTag("sss-data", "max");
     
     return { success: true, data: result };
   } catch (error) {
@@ -55,7 +55,7 @@ export async function deleteSssAction(id: string) {
   try {
     await sssService.deleteSSS(id);
     
-    revalidateTag("sss-data");
+    revalidateTag("sss-data", "max");
     
     return { success: true };
   } catch (error) {

@@ -1,0 +1,16 @@
+model Leave {
+  id             String   @id @default(cuid())
+  
+  // registryNumber String?   @unique
+  
+  fullName       String
+  
+  leaves      Json 
+
+  totalDays      Float     @default(0)
+
+  hireDate    DateTime?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
