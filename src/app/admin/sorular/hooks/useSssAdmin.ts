@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { SssItem } from "@/app/admin/sorular/constants/sss.constants";
 import { 
-  getAllSssAction, 
+  getAllSssFreshAction, 
   createSssAction, 
   updateSssAction, 
   deleteSssAction 
 } from "@/features/sss/actions/sss.action";
+
+import { toast } from "sonner";
 
 export const useSssAdmin = () => {
   const [sssList, setSssList] = useState<SssItem[]>([]);
@@ -23,12 +25,15 @@ export const useSssAdmin = () => {
   const fetchSssList = async () => {
     setIsLoading(true);
     try {
-      const res = await getAllSssAction();
+      const res = await getAllSssFreshAction();
       if (res.success && res.data) {
         setSssList(res.data as unknown as SssItem[]);
+      } else {
+        toast.error("Sorular yüklenirken bir hata oluştu.");
       }
     } catch (error) {
       console.error("Veriler çekilemedi:", error);
+      toast.error("Sunucu ile bağlantı kurulamadı.");
     } finally {
       setIsLoading(false);
     }
@@ -75,44 +80,60 @@ export const useSssAdmin = () => {
   const confirmDelete = async () => {
     if (!itemToDelete) return;
 
+    const toastId = toast.loading("Soru siliniyor...");
     setIsDeleting(true);
+    
     try {
       const res = await deleteSssAction(itemToDelete.id);
       if (res.success) {
         setSssList((prev) => prev.filter((item) => item.id !== itemToDelete.id));
         setDeleteModalOpen(false);
         setItemToDelete(null);
+        fetchSssList();
+        toast.success("Soru başarıyla silindi!", { id: toastId });
       } else {
-        alert(res.message || "Silme işlemi başarısız oldu.");
+        toast.error(res.message || "Silme işlemi başarısız oldu.", { id: toastId });
       }
     } catch (error) {
       console.error("Silme hatası:", error);
+      toast.error("Silme işlemi sırasında beklenmeyen bir hata oluştu.", { id: toastId });
     } finally {
       setIsDeleting(false);
     }
   };
 
   const handleSaveSss = async (payload: Pick<SssItem, "question" | "answer" | "isActive">) => {
+    const toastId = toast.loading("İşlem yapılıyor, lütfen bekleyin...");
+
     try {
       if (modalMode === "create") {
         const res = await createSssAction(payload);
         if (res.success) {
+          if (res.data) {
+            setSssList((prev) => [...prev, res.data as unknown as SssItem]);
+          }
           fetchSssList();
           setModalOpen(false);
+          toast.success("Soru başarıyla oluşturuldu!", { id: toastId });
         } else {
-          alert(res.message || "Kayıt eklenemedi.");
+          toast.error(res.message || "Oluşturma işlemi başarısız.", { id: toastId });
         }
       } else if (modalMode === "edit" && selectedSss) {
         const res = await updateSssAction(selectedSss.id, payload);
         if (res.success) {
+          if (res.data) {
+            setSssList((prev) => prev.map((item) => (item.id === selectedSss.id ? (res.data as unknown as SssItem) : item)));
+          }
           fetchSssList();
           setModalOpen(false);
+          toast.success("Soru başarıyla güncellendi!", { id: toastId });
         } else {
-          alert(res.message || "Kayıt güncellenemedi.");
+          toast.error(res.message || "Güncelleme işlemi başarısız.", { id: toastId });
         }
       }
     } catch (error) {
       console.error("Kaydetme hatası:", error);
+      toast.error("İşlem sırasında beklenmeyen bir hata oluştu.", { id: toastId });
     }
   };
 

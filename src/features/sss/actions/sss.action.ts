@@ -14,11 +14,22 @@ export async function getAllSssAction() {
   }
 }
 
+// Admin gibi anlık güncellik gereken yerler için cache'siz liste
+export async function getAllSssFreshAction() {
+  try {
+    const sss = await sssService.getAllSSSFromDb();
+    return { success: true, data: sss };
+  } catch (error) {
+    console.error("SSS (fresh) çekilirken hata:", error);
+    return { success: false, message: "SSS kayıtları listelenemedi." };
+  }
+}
+
 export async function createSssAction(data: Prisma.SSSCreateInput) {
   try {
     const result = await sssService.createSSS(data);
     
-    revalidateTag("sss-data", "max");
+    revalidateTag("sss-data");
     
     return { success: true, data: result };
   } catch (error) {
@@ -31,7 +42,7 @@ export async function updateSssAction(id: string, data: Prisma.SSSUpdateInput) {
   try {
     const result = await sssService.updateSSS(id, data);
     
-    revalidateTag("sss-data", "max");
+    revalidateTag("sss-data");
     
     return { success: true, data: result };
   } catch (error) {
@@ -44,7 +55,7 @@ export async function deleteSssAction(id: string) {
   try {
     await sssService.deleteSSS(id);
     
-    revalidateTag("sss-data", "max");
+    revalidateTag("sss-data");
     
     return { success: true };
   } catch (error) {
