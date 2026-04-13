@@ -1,10 +1,23 @@
 import { sssRepository } from "../repository/sss.repository";
 import { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 
 export const sssService = {
-  async getAllSSS() {
+  async getAllSSSFromDb() {
     return await sssRepository.findAll();
   },
+
+  getCachedSSS: unstable_cache(
+    async () => {
+      console.log("🔴 CACHE MISS: Veritabanına sorgu atılıyor...");
+      return await sssRepository.findAll();
+    },
+    ["sss-all-cache-key"],
+    {
+      tags: ["sss-data"],
+      revalidate: 86400, // 24 saat
+    }
+  ),
 
   async createSSS(data: Prisma.SSSCreateInput) {
     return await sssRepository.create(data);

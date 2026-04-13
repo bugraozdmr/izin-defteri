@@ -1,13 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { sssService } from "../service/sss.service";
-// import { Prisma } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 
 export async function getAllSssAction() {
   try {
-    const sss = await sssService.getAllSSS();
+    const sss = await sssService.getCachedSSS();
     return { success: true, data: sss };
   } catch (error) {
     console.error("SSS kayıtları çekilirken hata:", error);
@@ -19,8 +18,7 @@ export async function createSssAction(data: Prisma.SSSCreateInput) {
   try {
     const result = await sssService.createSSS(data);
     
-    revalidatePath("/sss");
-    revalidatePath("/admin/sss");
+    revalidateTag("sss-data", "max");
     
     return { success: true, data: result };
   } catch (error) {
@@ -33,8 +31,7 @@ export async function updateSssAction(id: string, data: Prisma.SSSUpdateInput) {
   try {
     const result = await sssService.updateSSS(id, data);
     
-    revalidatePath("/sss");
-    revalidatePath("/admin/sss");
+    revalidateTag("sss-data", "max");
     
     return { success: true, data: result };
   } catch (error) {
@@ -47,8 +44,7 @@ export async function deleteSssAction(id: string) {
   try {
     await sssService.deleteSSS(id);
     
-    revalidatePath("/sss");
-    revalidatePath("/admin/sss");
+    revalidateTag("sss-data", "max");
     
     return { success: true };
   } catch (error) {

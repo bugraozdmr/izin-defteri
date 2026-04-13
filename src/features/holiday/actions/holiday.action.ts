@@ -1,8 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { holidayService } from "../service/holiday.service";
-// import { Prisma } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 
 export async function getUpcomingHolidaysAction(fromDateStr?: string) {
@@ -30,8 +29,7 @@ export async function createHolidayAction(data: Prisma.HolidayCreateInput) {
   try {
     const result = await holidayService.createHoliday(data);
     
-    revalidatePath("/resmi-tatiller");
-    revalidatePath("/admin/tatiller");
+    revalidateTag("holiday-data", "max");
     
     return { success: true, data: result };
   } catch (error) {
@@ -44,8 +42,7 @@ export async function updateHolidayAction(id: string, data: Prisma.HolidayUpdate
   try {
     const result = await holidayService.updateHoliday(id, data);
     
-    revalidatePath("/resmi-tatiller");
-    revalidatePath("/admin/tatiller");
+    revalidateTag("holiday-data", "max");
     
     return { success: true, data: result };
   } catch (error) {
@@ -58,8 +55,7 @@ export async function deleteHolidayAction(id: string) {
   try {
     await holidayService.deleteHoliday(id);
     
-    revalidatePath("/resmi-tatiller");
-    revalidatePath("/admin/tatiller");
+    revalidateTag("holiday-data", "max");
     
     return { success: true };
   } catch (error) {

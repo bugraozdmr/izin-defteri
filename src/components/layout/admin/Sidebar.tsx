@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 
+import { logoutAction } from "@/features/auth/actions/auth.action";
+
 const menuItems = [
   { name: "Genel Bakış", href: "/admin", icon: LayoutDashboard },
   { name: "İzin Talepleri", href: "/admin/talepler", icon: ClipboardList },
@@ -112,16 +114,19 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
             {!isCollapsed && <span className="truncate">Menüyü Daralt</span>}
           </button>
 
-          <Link 
-            href="/" 
-            title={isCollapsed ? "Çıkış Yap" : undefined}
-            className={`flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors group ${
-              isCollapsed ? "justify-center" : "gap-3"
-            }`}
-          >
-            <LogOut className="h-5 w-5 shrink-0" />
-            {!isCollapsed && <span className="truncate">Yönetimden Çık</span>}
-          </Link>
+          <form action={logoutAction} className="w-full">
+            <button 
+              type="submit"
+              title={isCollapsed ? "Çıkış Yap" : undefined}
+              className={`flex w-full items-center rounded-xl px-3 py-2.5 text-sm font-semibold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors group ${
+                isCollapsed ? "justify-center" : "gap-3"
+              }`}
+            >
+              <LogOut className="h-5 w-5 shrink-0" />
+              {!isCollapsed && <span className="truncate">Çıkış Yap</span>}
+            </button>
+          </form>
+
         </div>
       </aside>
     </>

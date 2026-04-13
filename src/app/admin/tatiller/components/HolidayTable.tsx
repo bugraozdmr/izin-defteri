@@ -60,11 +60,11 @@ export default function HolidayTable({ holidays, onEdit, onDelete }: HolidayTabl
                 <td className="px-6 py-4">
                   {holiday.type === "PUBLIC" ? (
                     <span className="inline-flex items-center rounded-md bg-sky-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
-                      Public
+                      Resmi
                     </span>
                   ) : (
                     <span className="inline-flex items-center rounded-md bg-violet-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
-                      Corporate
+                      Diğer
                     </span>
                   )}
                 </td>
