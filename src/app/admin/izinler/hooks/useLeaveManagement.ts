@@ -126,6 +126,7 @@ export function useLeaveManagement() {
     totalPages,
     totalCount,
     isLoading,
+    refreshLeaves: fetchLeaves,
     isModalOpen,
     setIsModalOpen,
     modalMode,
