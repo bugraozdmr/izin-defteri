@@ -27,6 +27,11 @@ export default function LeaveFormSidebar({ formData, handlers }: any) {
         />
       </div>
 
+      <div>
+        <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">İşbaşı Tarihi</label>
+        <input type="date" value={formData.returnDate} onChange={(e) => handlers.setReturnDate(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950" />
+      </div>
+
       <div className="col-span-2">
         <label className="mb-2 block text-xs font-semibold text-slate-700 dark:text-slate-300">Yıllara Göre İzin</label>
         <div className="space-y-2">
@@ -75,11 +80,6 @@ export default function LeaveFormSidebar({ formData, handlers }: any) {
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">İşbaşı Tarihi</label>
-        <input type="date" value={formData.returnDate} onChange={(e) => handlers.setReturnDate(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950" />
-      </div>
-
-      <div>
         <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">TEL</label>
         <input value={formData.phone} onChange={(e) => handlers.setPhone(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950" />
       </div>
@@ -87,6 +87,16 @@ export default function LeaveFormSidebar({ formData, handlers }: any) {
       <div>
         <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">Yerine Görev Alacak Personel</label>
         <input value={formData.substitutePerson} onChange={(e) => handlers.setSubstitutePerson(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950" />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">Kalan İzin</label>
+        <input
+          value={formData.remainingLeave}
+          onChange={(e) => handlers.setRemainingLeave(e.target.value)}
+          placeholder="Örn: 17"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950"
+        />
       </div>
 
       <div>

@@ -15,6 +15,10 @@ export const generatePDF = async (
   filename: string,
   _data?: LeaveRequestData
 ): Promise<void> => {
+  const isA4SinglePage = elementId === "print-area";
+  const A4_WIDTH_PX = 794;
+  const A4_HEIGHT_PX = 1123;
+
   const fontStack =
     'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif';
 
@@ -26,8 +30,13 @@ export const generatePDF = async (
 
   const originalStyle = element.getAttribute("style") || "";
   element.style.fontFamily = fontStack;
-  element.style.width = "794px"; // A4 @ 96dpi
-  element.style.maxWidth = "794px";
+  element.style.width = `${A4_WIDTH_PX}px`;
+  element.style.maxWidth = `${A4_WIDTH_PX}px`;
+  if (isA4SinglePage) {
+    element.style.height = `${A4_HEIGHT_PX}px`;
+    element.style.maxHeight = `${A4_HEIGHT_PX}px`;
+    element.style.overflow = "hidden";
+  }
 
   try {
     if (document.fonts?.ready) {
@@ -42,10 +51,10 @@ export const generatePDF = async (
       backgroundColor: "#ffffff",
       logging: false,
       letterRendering: true,
-      width: element.scrollWidth,
-      height: element.scrollHeight,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
+      width: isA4SinglePage ? A4_WIDTH_PX : element.scrollWidth,
+      height: isA4SinglePage ? A4_HEIGHT_PX : element.scrollHeight,
+      windowWidth: isA4SinglePage ? A4_WIDTH_PX : element.scrollWidth,
+      windowHeight: isA4SinglePage ? A4_HEIGHT_PX : element.scrollHeight,
       onclone: (clonedDoc: Document) => {
         const clonedEl = clonedDoc.getElementById(elementId);
         if (!clonedEl) return;
@@ -55,6 +64,13 @@ export const generatePDF = async (
         clonedEl.style.fontFamily = fontStack;
         (clonedEl.style as any).webkitFontSmoothing = "antialiased";
         clonedEl.style.color = "#000000";
+        if (isA4SinglePage) {
+          clonedEl.style.width = `${A4_WIDTH_PX}px`;
+          clonedEl.style.maxWidth = `${A4_WIDTH_PX}px`;
+          clonedEl.style.height = `${A4_HEIGHT_PX}px`;
+          clonedEl.style.maxHeight = `${A4_HEIGHT_PX}px`;
+          clonedEl.style.overflow = "hidden";
+        }
 
         // Tüm alt elementlerde de font'u zorla
         const allEls = clonedEl.querySelectorAll<HTMLElement>("*");
@@ -78,14 +94,16 @@ export const generatePDF = async (
     const canvasAspect = canvas.height / canvas.width;
     const imgHeightInMM = pdfWidth * canvasAspect;
 
-    if (imgHeightInMM <= pdfHeight) {
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, imgHeightInMM);
+    if (isA4SinglePage) {
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    } else if (imgHeightInMM <= pdfHeight + 0.25) {
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, Math.min(imgHeightInMM, pdfHeight));
     } else {
       let remainingHeight = imgHeightInMM;
       let sourceY = 0;
       let isFirstPage = true;
 
-      while (remainingHeight > 0) {
+      while (remainingHeight > 0.25) {
         if (!isFirstPage) pdf.addPage();
 
         const sliceHeightMM = Math.min(pdfHeight, remainingHeight);

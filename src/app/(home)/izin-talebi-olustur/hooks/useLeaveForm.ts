@@ -27,6 +27,43 @@ function parseInteger(value: string) {
   return parsed;
 }
 
+function parseOptionalInteger(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return { ok: true as const, value: null as number | null };
+  const parsed = Number.parseInt(trimmed, 10);
+  if (Number.isNaN(parsed)) return { ok: false as const, value: null as number | null };
+  return { ok: true as const, value: parsed };
+}
+
+function parseLocalDate(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parts = trimmed.split("-").map((x) => Number.parseInt(x, 10));
+  if (parts.length !== 3) return null;
+  const [year, month, day] = parts;
+  if (!year || !month || !day) return null;
+  const d = new Date(year, month - 1, day);
+  if (Number.isNaN(d.getTime())) return null;
+  return d;
+}
+
+function getFullYearsSince(start: Date, now: Date) {
+  let years = now.getFullYear() - start.getFullYear();
+  const nowMonth = now.getMonth();
+  const startMonth = start.getMonth();
+  if (nowMonth < startMonth || (nowMonth === startMonth && now.getDate() < start.getDate())) {
+    years -= 1;
+  }
+  return Math.max(0, years);
+}
+
+function getEntitlementDays(serviceYears: number) {
+  if (serviceYears < 1) return 0;
+  if (serviceYears <= 5) return 16;
+  if (serviceYears < 15) return 22;
+  return 28;
+}
+
 function formatYearList(years: string[]) {
   const uniqueYears = Array.from(new Set(years.map((y) => y.trim()).filter(Boolean)));
   if (uniqueYears.length === 0) return "....";
@@ -48,19 +85,30 @@ export const useLeaveForm = () => {
   const [returnDate, setReturnDate] = useState("");
   const [phone, setPhone] = useState("");
   const [substitutePerson, setSubstitutePerson] = useState("");
+  const [remainingLeave, setRemainingLeave] = useState("");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const staffSignDate = `.../.../${currentYear}`;
   const managerApprovalDate = `.../.../${currentYear}`;
 
-  const remainingLeave = "";
   const managerName = "M. Kübra KAHRAMAN";
   const managerTitle = "Müdür";
 
   const totalLeave = useMemo(() => {
     return leaveYears.reduce((acc, item) => acc + parseInteger(item.days), 0);
   }, [leaveYears]);
+
+  const serviceYears = useMemo(() => {
+    const parsed = parseLocalDate(returnDate);
+    if (!parsed) return null;
+    return getFullYearsSince(parsed, new Date());
+  }, [returnDate]);
+
+  const entitlementDays = useMemo(() => {
+    if (serviceYears === null) return null;
+    return getEntitlementDays(serviceYears);
+  }, [serviceYears]);
 
   const leaveSummary = useMemo(() => {
     const parts = leaveYears.map((item, idx) => {
@@ -72,20 +120,74 @@ export const useLeaveForm = () => {
   }, [leaveYears, totalLeave]);
 
   const requestText = useMemo(
-    () =>
-      `${formatYearList(leaveYears.map((x) => x.year))} ${
-        leaveYears.filter((x) => x.year.trim()).length > 1 ? "yıllarına" : "yılına"
-      } ait izin${leaveYears.filter((x) => x.year.trim()).length > 1 ? "lerimden" : "imden"} ${totalLeave} gününü ${formatDateDot(
+    () => {
+      const hasAnyYear = leaveYears.some((x) => x.year.trim());
+      const hasAnyDays = totalLeave > 0;
+      const hasStartDate = Boolean(leaveStartDate.trim());
+
+      if (!hasAnyYear || !hasAnyDays || !hasStartDate) {
+        return "Buraya talep metni gelecek.";
+      }
+
+      const yearCount = leaveYears.filter((x) => x.year.trim()).length;
+      const yearsLabel = yearCount > 1 ? "yıllarına" : "yılına";
+      const fromLabel = yearCount > 1 ? "izinlerimden" : "iznimden";
+      return `${formatYearList(leaveYears.map((x) => x.year))} ${yearsLabel} ait ${fromLabel} ${totalLeave} gününü ${formatDateDot(
         leaveStartDate,
         ".../.../...."
-      )} tarihinden itibaren kullanmam için,`,
-    [leaveYears, leaveStartDate, totalLeave]
+      )} tarihinden itibaren kullanmam için,`;
+    },
+    [leaveStartDate, leaveYears, totalLeave]
   );
 
-  // const finalRequestText = requestOverride.trim() || requestText;
-  const finalRequestText = "Buraya talep metni gelecek.";
+  const finalRequestText = requestOverride.trim() || requestText;
+
+  const validation = useMemo(() => {
+    const issues: string[] = [];
+
+    const remainingParsed = parseOptionalInteger(remainingLeave);
+    if (!remainingParsed.ok) {
+      issues.push("Kalan izin sayısal olmalı.");
+    } else if (remainingParsed.value !== null && remainingParsed.value < 0) {
+      issues.push("Kalan izin 0'dan küçük olamaz.");
+    }
+
+    const remainingValue = remainingParsed.ok ? remainingParsed.value : null;
+    if (remainingValue !== null && totalLeave > remainingValue) {
+      issues.push("Talep edilen toplam gün, kalan izni aşıyor.");
+    }
+
+    const hasWorkStartDate = returnDate.trim().length > 0;
+    if (hasWorkStartDate) {
+      const parsedHire = parseLocalDate(returnDate);
+      if (!parsedHire) {
+        issues.push("İşe giriş tarihi geçersiz.");
+      } else {
+        const years = getFullYearsSince(parsedHire, new Date());
+        const entitlement = getEntitlementDays(years);
+
+        if (entitlement === 0) {
+          issues.push("İşe giriş tarihinize göre henüz yıllık izniniz bulunmuyor (ilk yıl dolmadan izin kullanılamaz).");
+        }
+
+        if (totalLeave > entitlement) {
+          issues.push(`Toplam izin talebi (${totalLeave} gün) hak edişinizi (${entitlement} gün) aşıyor.`);
+        }
+
+        if (remainingValue !== null && remainingValue > entitlement) {
+          issues.push(`Kalan izin (${remainingValue}) hak edişinizi (${entitlement}) aşamaz.`);
+        }
+      }
+    }
+
+    return {
+      canDownload: issues.length === 0,
+      message: issues[0] || "",
+    };
+  }, [remainingLeave, returnDate, totalLeave]);
 
   const handleDownloadPDF = async () => {
+    if (!validation.canDownload) return;
     setIsGeneratingPdf(true);
     const fileSafeName = fullName.trim() ? fullName.trim().replace(/\s+/g, "_") : "Personel";
     await generatePDF("print-area", `Yillik_Izin_Formu_${fileSafeName}`);
@@ -101,11 +203,17 @@ export const useLeaveForm = () => {
     handlers: {
       setFullName, setDuty, setLeaveYears,
       setLeaveStartDate, setRequestOverride, setLeaveAddress, setReturnDate,
-      setPhone, setSubstitutePerson,
+      setPhone, setSubstitutePerson, setRemainingLeave,
       handleDownloadPDF
     },
     computed: {
-      leaveSummary, finalRequestText, isGeneratingPdf
+      leaveSummary,
+      finalRequestText,
+      isGeneratingPdf,
+      serviceYears,
+      entitlementDays,
+      canDownloadPdf: validation.canDownload,
+      validationMessage: validation.message,
     }
   };
 };

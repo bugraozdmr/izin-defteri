@@ -6,11 +6,16 @@ export default function LeaveFormPreview({ formData, computed, handlers }: any) 
   return (
     <div className="lg:col-span-8">
       <div className="mb-3 flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
-        <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">A4 Önizleme</div>
+        <div>
+          <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">A4 Önizleme</div>
+          {!computed.canDownloadPdf && computed.validationMessage ? (
+            <div className="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-400">{computed.validationMessage}</div>
+          ) : null}
+        </div>
         <button
           type="button"
           onClick={handlers.handleDownloadPDF}
-          disabled={computed.isGeneratingPdf}
+          disabled={computed.isGeneratingPdf || !computed.canDownloadPdf}
           className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
         >
           {computed.isGeneratingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
