@@ -23,7 +23,7 @@ export default function Navbar() {
     }, [pathname]);
 
     const navLinks = [
-        { href: "/sorgula", label: "Sorgula" },
+        // { href: "/sorgula", label: "Sorgula" },
         { href: "/tatiller", label: "Tatiller" },
         { href: "/sss", label: "SSS" },
         { href: "/izin-talebi-olustur", label: "İzin Formu Oluştur" },

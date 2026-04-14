@@ -4,7 +4,7 @@ import { ArrowUpRight, ShieldCheck, Sparkles } from "lucide-react";
 
 export default function Footer() {
   const links = [
-    { href: "/sorgula", label: "Sorgula" },
+    // { href: "/sorgula", label: "Sorgula" },
     { href: "/izin-talebi-olustur", label: "Talep Formu" },
     { href: "/resmi-tatiller", label: "Resmi Tatiller" },
     { href: "/sss", label: "Sık Sorulan Sorular" },

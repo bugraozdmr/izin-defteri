@@ -62,13 +62,13 @@ export default function HomePage() {
               Formu Doldur 
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
+            { /* <Link
               href="/sorgula"
               className="inline-flex min-w-52 items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white/85 px-6 py-3 text-sm font-bold text-slate-700 backdrop-blur transition-colors hover:bg-white dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-200 dark:hover:bg-slate-900"
             >
               Sorgula
               <Search className="h-4 w-4" />
-            </Link>
+            </Link> */ }
           </div>
         </div>
 
@@ -130,7 +130,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mt-12 reveal reveal-4">
+        { /*<div className="mt-12 reveal reveal-4">
           <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white/85 p-6 shadow-[0_16px_38px_-24px_rgba(2,6,23,0.5)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/70 sm:p-8">
             <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-sky-200/40 blur-2xl dark:bg-sky-700/25" />
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -154,8 +154,8 @@ export default function HomePage() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-          </div>
-        </div>
+          </div> 
+        </div> */ }
       </section>
     </div>
   );

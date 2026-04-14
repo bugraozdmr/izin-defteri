@@ -27,35 +27,36 @@ function parseInteger(value: string) {
   return parsed;
 }
 
+function formatYearList(years: string[]) {
+  const uniqueYears = Array.from(new Set(years.map((y) => y.trim()).filter(Boolean)));
+  if (uniqueYears.length === 0) return "....";
+  if (uniqueYears.length === 1) return uniqueYears[0];
+  if (uniqueYears.length === 2) return `${uniqueYears[0]} ve ${uniqueYears[1]}`;
+  return `${uniqueYears.slice(0, -1).join(", ")} ve ${uniqueYears[uniqueYears.length - 1]}`;
+}
+
 export const useLeaveForm = () => {
-  const [fullName, setFullName] = useState("Ayşe DEMİR");
-  const [duty, setDuty] = useState("Memur");
+  const [fullName, setFullName] = useState("");
+  const [duty, setDuty] = useState("");
   const [leaveYears, setLeaveYears] = useState<LeaveYearItem[]>(() => [
-    { id: makeId(), year: "2024", days: "3" },
-    { id: makeId(), year: "2025", days: "16" },
+    { id: makeId(), year: "", days: "" },
+    { id: makeId(), year: "", days: "" },
   ]);
-  const [requestedYear, setRequestedYear] = useState("2024");
-  const [requestedDays, setRequestedDays] = useState("2");
-  const [leaveStartDate, setLeaveStartDate] = useState("2026-04-11");
+  const [leaveStartDate, setLeaveStartDate] = useState("");
   const [requestOverride, setRequestOverride] = useState("");
-  const [leaveAddress, setLeaveAddress] = useState("Ankara");
-  const [returnDate, setReturnDate] = useState("2026-04-14");
-  const [phone, setPhone] = useState("0532 123 45 67");
-  const [substitutePerson, setSubstitutePerson] = useState("Mehmet YILMAZ");
+  const [leaveAddress, setLeaveAddress] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+  const [phone, setPhone] = useState("");
+  const [substitutePerson, setSubstitutePerson] = useState("");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const staffSignDate = `.../.../${currentYear}`;
   const managerApprovalDate = `.../.../${currentYear}`;
 
-  const remainingLeave = "17";
+  const remainingLeave = "";
   const managerName = "M. Kübra KAHRAMAN";
   const managerTitle = "Müdür";
-
-  const baseYear = useMemo(() => {
-    const firstNonEmpty = leaveYears.find((x) => x.year.trim());
-    return firstNonEmpty?.year || "2024";
-  }, [leaveYears]);
 
   const totalLeave = useMemo(() => {
     return leaveYears.reduce((acc, item) => acc + parseInteger(item.days), 0);
@@ -72,14 +73,17 @@ export const useLeaveForm = () => {
 
   const requestText = useMemo(
     () =>
-      `${requestedYear || baseYear || "2024"} yılına ait iznimden ${requestedDays || "0"} gününü ${formatDateDot(
+      `${formatYearList(leaveYears.map((x) => x.year))} ${
+        leaveYears.filter((x) => x.year.trim()).length > 1 ? "yıllarına" : "yılına"
+      } ait izin${leaveYears.filter((x) => x.year.trim()).length > 1 ? "lerimden" : "imden"} ${totalLeave} gününü ${formatDateDot(
         leaveStartDate,
         ".../.../...."
       )} tarihinden itibaren kullanmam için,`,
-    [baseYear, leaveStartDate, requestedDays, requestedYear]
+    [leaveYears, leaveStartDate, totalLeave]
   );
 
-  const finalRequestText = requestOverride.trim() || requestText;
+  // const finalRequestText = requestOverride.trim() || requestText;
+  const finalRequestText = "Buraya talep metni gelecek.";
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPdf(true);
@@ -90,12 +94,12 @@ export const useLeaveForm = () => {
 
   return {
     formData: {
-      fullName, duty, leaveYears, requestedYear, requestedDays, leaveStartDate,
+      fullName, duty, leaveYears, leaveStartDate,
       requestOverride, leaveAddress, returnDate, phone, substitutePerson,
       staffSignDate, managerApprovalDate, remainingLeave, managerName, managerTitle
     },
     handlers: {
-      setFullName, setDuty, setLeaveYears, setRequestedYear, setRequestedDays,
+      setFullName, setDuty, setLeaveYears,
       setLeaveStartDate, setRequestOverride, setLeaveAddress, setReturnDate,
       setPhone, setSubstitutePerson,
       handleDownloadPDF

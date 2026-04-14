@@ -43,13 +43,6 @@ export default function NotFound() {
                 Ana Sayfa
               </Link>
 
-              <Link
-                href="/sorgula"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white/85 px-6 py-3 text-sm font-bold text-slate-700 backdrop-blur transition-colors hover:bg-white dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-200 dark:hover:bg-slate-950"
-              >
-                <Search className="h-4 w-4" />
-                Sorgula
-              </Link>
             </div>
           </div>
         </div>

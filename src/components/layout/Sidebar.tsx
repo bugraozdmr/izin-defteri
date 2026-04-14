@@ -13,12 +13,12 @@ export default function Sidebar() {
 						>
 							İzin Talebi Oluştur
 						</Link>
-						<Link
+						{/* <Link
 							href="/sorgula"
 							className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
 						>
 							Sorgula
-						</Link>
+						</Link> */}
 					</div>
 				</div>
 			</div>

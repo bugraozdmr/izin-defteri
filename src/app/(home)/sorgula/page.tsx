@@ -44,7 +44,7 @@ export default function QueryLeaveRequestsPage() {
       </div> */ 
       }
 
-      <div className="reveal reveal-1 mb-8">
+      { /* <div className="reveal reveal-1 mb-8">
 
         <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
           İzin <span className="bg-gradient-to-r from-sky-600 to-cyan-500 bg-clip-text text-transparent">Sorgulama</span>
@@ -53,7 +53,7 @@ export default function QueryLeaveRequestsPage() {
           Sicil numaranızı girerek güncel izin bakiyenizi, yıl içindeki kullanımlarınızı ve geçmiş veya
           bekleyen tüm izin taleplerinizin son durumunu görüntüleyebilirsiniz.
         </p>
-      </div>
+      </div> */ }
 
       <div className="grid gap-8 lg:grid-cols-12">
         <div className="reveal reveal-2 flex flex-col gap-6 lg:col-span-4">

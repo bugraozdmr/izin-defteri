@@ -64,21 +64,10 @@ export default function LeaveFormSidebar({ formData, handlers }: any) {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">Talep Yılı</label>
-          <input value={formData.requestedYear} onChange={(e) => handlers.setRequestedYear(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950" />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">Talep Gün</label>
-          <input value={formData.requestedDays} onChange={(e) => handlers.setRequestedDays(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950" />
-        </div>
-      </div>
-
-      <div>
+      {/*<div>
         <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">İzin Başlangıç Tarihi</label>
         <input type="date" value={formData.leaveStartDate} onChange={(e) => handlers.setLeaveStartDate(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950" />
-      </div>
+      </div>*/}
 
       <div>
         <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">İzin Adresi</label>
