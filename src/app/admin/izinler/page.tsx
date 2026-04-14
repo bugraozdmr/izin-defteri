@@ -6,8 +6,10 @@ import { toast } from "sonner";
 import { UserPlus, Search, ClipboardList, ChevronLeft, ChevronRight, Download, Upload, X, FileJson, FileText, FileSpreadsheet, Loader2 } from "lucide-react";
 import LeaveTable from "@/app/admin/izinler/components/LeaveTable";
 import LeaveFormModal from "@/app/admin/izinler/components/LeaveFormModal";
+import AdminLeaveRequestFormModal from "@/app/admin/izinler/components/AdminLeaveRequestFormModal";
 import ConfirmDeleteModal from "@/components/ui/ConfirmDeleteModal";
 import { useLeaveManagement } from "@/app/admin/izinler/hooks/useLeaveManagement";
+import type { Leave } from "@/features/leave/types/leave";
 
 export default function AdminLeavesPage() {
   const {
@@ -43,6 +45,9 @@ export default function AdminLeavesPage() {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [isRequestFormOpen, setIsRequestFormOpen] = useState(false);
+  const [requestFormLeave, setRequestFormLeave] = useState<Leave | null>(null);
+
   const importType = useMemo<"excel" | "csv" | null>(() => {
     if (!importFile) return null;
     const name = importFile.name.toLowerCase();
@@ -74,6 +79,16 @@ export default function AdminLeavesPage() {
     setImportFile(null);
     setIsDragOver(false);
     setIsImportOpen(true);
+  };
+
+  const handleOpenRequestForm = (leave: Leave) => {
+    setRequestFormLeave(leave);
+    setIsRequestFormOpen(true);
+  };
+
+  const handleCloseRequestForm = () => {
+    setIsRequestFormOpen(false);
+    setRequestFormLeave(null);
   };
 
   const acceptImportFile = (file: File | null | undefined) => {
@@ -256,6 +271,7 @@ export default function AdminLeavesPage() {
             leaves={leaves}
             onEdit={handleOpenEdit} 
             onDelete={handleDeleteLeave} 
+            onOpenForm={handleOpenRequestForm}
           />
         )}
         
@@ -309,6 +325,15 @@ export default function AdminLeavesPage() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      {isRequestFormOpen ? (
+        <AdminLeaveRequestFormModal
+          isOpen={isRequestFormOpen}
+          leave={requestFormLeave}
+          onClose={handleCloseRequestForm}
+          key={requestFormLeave?.id ?? "empty"}
+        />
+      ) : null}
 
       {isExportOpen ? (
         <div

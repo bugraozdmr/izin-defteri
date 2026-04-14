@@ -7,6 +7,23 @@ export type LeaveYearItem = {
   days: string;
 };
 
+export type LeaveFormInitialData = {
+  fullName?: string;
+  duty?: string;
+  leaveYears?: Array<{ year: string; days: string | number }>;
+  leaveStartDate?: string;
+  requestOverride?: string;
+  leaveAddress?: string;
+  returnDate?: string;
+  phone?: string;
+  substitutePerson?: string;
+  remainingLeave?: string;
+  staffSignDate?: string;
+  managerApprovalDate?: string;
+  managerName?: string;
+  managerTitle?: string;
+};
+
 export function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
@@ -72,28 +89,41 @@ function formatYearList(years: string[]) {
   return `${uniqueYears.slice(0, -1).join(", ")} ve ${uniqueYears[uniqueYears.length - 1]}`;
 }
 
-export const useLeaveForm = () => {
-  const [fullName, setFullName] = useState("");
-  const [duty, setDuty] = useState("");
-  const [leaveYears, setLeaveYears] = useState<LeaveYearItem[]>(() => [
-    { id: makeId(), year: "", days: "" },
-    { id: makeId(), year: "", days: "" },
-  ]);
-  const [leaveStartDate, setLeaveStartDate] = useState("");
-  const [requestOverride, setRequestOverride] = useState("");
-  const [leaveAddress, setLeaveAddress] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-  const [phone, setPhone] = useState("");
-  const [substitutePerson, setSubstitutePerson] = useState("");
-  const [remainingLeave, setRemainingLeave] = useState("");
+export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
+  const [fullName, setFullName] = useState(initialData?.fullName ?? "");
+  const [duty, setDuty] = useState(initialData?.duty ?? "");
+  const [leaveYears, setLeaveYears] = useState<LeaveYearItem[]>(() => {
+    const source = initialData?.leaveYears ?? [];
+    const mapped = source
+      .filter((item) => String(item.year ?? "").trim().length > 0 || String(item.days ?? "").trim().length > 0)
+      .map((item) => ({
+        id: makeId(),
+        year: String(item.year ?? "").trim(),
+        days: String(item.days ?? "").trim(),
+      }));
+
+    if (mapped.length > 0) return mapped;
+
+    return [
+      { id: makeId(), year: "", days: "" },
+      { id: makeId(), year: "", days: "" },
+    ];
+  });
+  const [leaveStartDate, setLeaveStartDate] = useState(initialData?.leaveStartDate ?? "");
+  const [requestOverride, setRequestOverride] = useState(initialData?.requestOverride ?? "");
+  const [leaveAddress, setLeaveAddress] = useState(initialData?.leaveAddress ?? "");
+  const [returnDate, setReturnDate] = useState(initialData?.returnDate ?? "");
+  const [phone, setPhone] = useState(initialData?.phone ?? "");
+  const [substitutePerson, setSubstitutePerson] = useState(initialData?.substitutePerson ?? "");
+  const [remainingLeave, setRemainingLeave] = useState(initialData?.remainingLeave ?? "");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const currentYear = new Date().getFullYear();
-  const staffSignDate = `.../.../${currentYear}`;
-  const managerApprovalDate = `.../.../${currentYear}`;
+  const staffSignDate = initialData?.staffSignDate ?? `.../.../${currentYear}`;
+  const managerApprovalDate = initialData?.managerApprovalDate ?? `.../.../${currentYear}`;
 
-  const managerName = "M. Kübra KAHRAMAN";
-  const managerTitle = "Müdür";
+  const managerName = initialData?.managerName ?? "M. Kübra KAHRAMAN";
+  const managerTitle = initialData?.managerTitle ?? "Müdür";
 
   const totalLeave = useMemo(() => {
     return leaveYears.reduce((acc, item) => acc + parseInteger(item.days), 0);
@@ -168,14 +198,6 @@ export const useLeaveForm = () => {
 
         if (entitlement === 0) {
           issues.push("İşe giriş tarihinize göre henüz yıllık izniniz bulunmuyor (ilk yıl dolmadan izin kullanılamaz).");
-        }
-
-        if (totalLeave > entitlement) {
-          issues.push(`Toplam izin talebi (${totalLeave} gün) hak edişinizi (${entitlement} gün) aşıyor.`);
-        }
-
-        if (remainingValue !== null && remainingValue > entitlement) {
-          issues.push(`Kalan izin (${remainingValue}) hak edişinizi (${entitlement}) aşamaz.`);
         }
       }
     }

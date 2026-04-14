@@ -1,13 +1,14 @@
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, FileIcon, Trash2 } from "lucide-react";
 import { Leave } from "@/features/leave/types/leave";
 
 interface LeaveTableProps {
   leaves: Leave[];
   onEdit: (leave: Leave) => void;
   onDelete: (id: string) => void;
+  onOpenForm: (leave: Leave) => void;
 }
 
-export default function LeaveTable({ leaves = [], onEdit, onDelete }: LeaveTableProps) {
+export default function LeaveTable({ leaves = [], onEdit, onDelete, onOpenForm }: LeaveTableProps) {
   const formatDate = (dateValue: Date | null | string) => {
     if (!dateValue) return "-";
     const d = new Date(dateValue);
@@ -37,7 +38,7 @@ export default function LeaveTable({ leaves = [], onEdit, onDelete }: LeaveTable
             <th className="px-6 py-4">Adı Soyadı</th>
             <th className="px-6 py-4">İşe Giriş Tarihi</th>
             <th className="px-6 py-4">İzin Bakiyeleri (Yıl)</th>
-            <th className="px-6 py-4 text-center">Toplam İzin</th>
+            <th className="px-6 py-4 text-center">Yıllık İzin</th>
             <th className="px-6 py-4 text-right">İşlemler</th>
           </tr>
         </thead>
@@ -64,13 +65,27 @@ export default function LeaveTable({ leaves = [], onEdit, onDelete }: LeaveTable
                 </td>
 
                 <td className="px-6 py-4 text-center">
-                  <span className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-full px-2.5 text-xs font-bold ${leave.totalDays == 0 ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'}`}>
+                  <span
+                    className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-full px-2.5 text-xs font-bold ${
+                      leave.totalDays === 0
+                        ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300"
+                        : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                    }`}
+                  >
                     {leave.totalDays}
                   </span>
                 </td>
 
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onOpenForm(leave)}
+                      className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-orange-50 hover:text-orange-600 dark:text-slate-500 dark:hover:bg-orange-500/10 dark:hover:text-orange-400"
+                      title="Formu Aç"
+                    >
+                      <FileIcon className="h-4 w-4" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => onEdit(leave)}
