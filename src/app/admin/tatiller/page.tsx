@@ -1,10 +1,10 @@
 "use client";
 
 import { CalendarPlus, Search, CalendarDays } from "lucide-react";
-import HolidayTable from "@/app/admin/tatiller/components/HolidayTable";
-import HolidayFormModal from "@/app/admin/tatiller/components/HolidayFormModal";
-import ConfirmDeleteModal from "@/components/ui/ConfirmDeleteModal";
-import { useHolidayManagement } from "@/app/admin/tatiller/hooks/useHolidayManagement";
+import HolidayTable from "@/features/holiday/components/admin/HolidayTable";
+import HolidayFormModal from "@/features/holiday/components/admin/HolidayFormModal";
+import ConfirmDeleteModal from "@/shared/components/ui/ConfirmDeleteModal";
+import { useHolidayManagement } from "@/features/holiday/hooks/admin/hooks";
 
 export default function AdminHolidaysPage() {
   const {

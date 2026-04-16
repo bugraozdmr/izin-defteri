@@ -4,6 +4,7 @@ model Leave {
   // registryNumber String?   @unique
   
   fullName       String
+  jobTitle       String?
   
   leaves      Json 
 

@@ -18,7 +18,7 @@ export default function CreateLeaveRequestPage() {
 
       <div className="grid gap-6 lg:grid-cols-12">
         <div className="lg:col-span-4">
-          <LeaveFormSidebar formData={formData} handlers={handlers} />
+          <LeaveFormSidebar formData={formData} handlers={handlers} computed={computed} />
         </div>
         
         <LeaveFormPreview formData={formData} computed={computed} handlers={handlers} />

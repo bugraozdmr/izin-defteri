@@ -12,12 +12,11 @@ export type LeaveFormInitialData = {
   duty?: string;
   leaveYears?: Array<{ year: string; days: string | number }>;
   leaveStartDate?: string;
-  requestOverride?: string;
+  requestedLeaveDays?: string;
   leaveAddress?: string;
   returnDate?: string;
   phone?: string;
   substitutePerson?: string;
-  remainingLeave?: string;
   staffSignDate?: string;
   managerApprovalDate?: string;
   managerName?: string;
@@ -50,6 +49,12 @@ function parseOptionalInteger(value: string) {
   const parsed = Number.parseInt(trimmed, 10);
   if (Number.isNaN(parsed)) return { ok: false as const, value: null as number | null };
   return { ok: true as const, value: parsed };
+}
+
+function parseNonNegativeInteger(value: string) {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed) || parsed < 0) return 0;
+  return parsed;
 }
 
 function parseLocalDate(value: string) {
@@ -110,12 +115,11 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
     ];
   });
   const [leaveStartDate, setLeaveStartDate] = useState(initialData?.leaveStartDate ?? "");
-  const [requestOverride, setRequestOverride] = useState(initialData?.requestOverride ?? "");
+  const [requestedLeaveDays, setRequestedLeaveDays] = useState(initialData?.requestedLeaveDays ?? "");
   const [leaveAddress, setLeaveAddress] = useState(initialData?.leaveAddress ?? "");
   const [returnDate, setReturnDate] = useState(initialData?.returnDate ?? "");
   const [phone, setPhone] = useState(initialData?.phone ?? "");
   const [substitutePerson, setSubstitutePerson] = useState(initialData?.substitutePerson ?? "");
-  const [remainingLeave, setRemainingLeave] = useState(initialData?.remainingLeave ?? "");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const currentYear = new Date().getFullYear();
@@ -140,51 +144,120 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
     return getEntitlementDays(serviceYears);
   }, [serviceYears]);
 
+  const normalizedLeaveYears = useMemo(() => {
+    return leaveYears
+      .map((item) => ({
+        year: item.year.trim(),
+        availableDays: parseNonNegativeInteger(item.days),
+      }))
+      .filter((item) => item.year.length > 0)
+      .sort((a, b) => {
+        const ay = Number.parseInt(a.year, 10);
+        const by = Number.parseInt(b.year, 10);
+        const safeAy = Number.isNaN(ay) ? Number.MAX_SAFE_INTEGER : ay;
+        const safeBy = Number.isNaN(by) ? Number.MAX_SAFE_INTEGER : by;
+        if (safeAy !== safeBy) return safeAy - safeBy;
+        return a.year.localeCompare(b.year, "tr");
+      });
+  }, [leaveYears]);
+
+  const totalAvailableDays = useMemo(() => {
+    return normalizedLeaveYears.reduce((acc, item) => acc + item.availableDays, 0);
+  }, [normalizedLeaveYears]);
+
+  const allocation = useMemo(() => {
+    const parsed = parseOptionalInteger(requestedLeaveDays);
+    if (!parsed.ok || parsed.value === null || parsed.value <= 0) {
+      return {
+        requestedDays: 0,
+        items: [] as Array<{ year: string; usedDays: number; availableDays: number; remainingDays: number }>,
+        unallocatedDays: 0,
+      };
+    }
+
+    let remaining = parsed.value;
+    const items: Array<{ year: string; usedDays: number; availableDays: number; remainingDays: number }> = [];
+
+    for (const item of normalizedLeaveYears) {
+      if (remaining <= 0) break;
+      if (item.availableDays <= 0) continue;
+
+      const usedDays = Math.min(item.availableDays, remaining);
+      items.push({
+        year: item.year,
+        usedDays,
+        availableDays: item.availableDays,
+        remainingDays: item.availableDays - usedDays,
+      });
+      remaining -= usedDays;
+    }
+
+    return {
+      requestedDays: parsed.value,
+      items,
+      unallocatedDays: Math.max(0, remaining),
+    };
+  }, [requestedLeaveDays, normalizedLeaveYears]);
+
   const leaveSummary = useMemo(() => {
-    const parts = leaveYears.map((item, idx) => {
-      const y = item.year.trim() ? item.year.trim() : "....";
-      const d = item.days.trim() ? item.days.trim() : "0";
-      return idx === 0 ? `${y} - ${d} gün` : `${y} - ${d}`;
-    });
-    return `${parts.join(" + ")} = Toplam ${totalLeave} gün`;
-  }, [leaveYears, totalLeave]);
+    if (allocation.requestedDays <= 0) {
+      return "Kullanım dağılımı için kullanılacak gün girin.";
+    }
 
-  const requestText = useMemo(
-    () => {
-      const hasAnyYear = leaveYears.some((x) => x.year.trim());
-      const hasAnyDays = totalLeave > 0;
-      const hasStartDate = Boolean(leaveStartDate.trim());
+    if (allocation.items.length === 0) {
+      return "Dağıtılacak uygun izin bakiyesi bulunamadı.";
+    }
 
-      if (!hasAnyYear || !hasAnyDays || !hasStartDate) {
-        return "Buraya talep metni gelecek.";
-      }
+    const usedTotal = allocation.items.reduce((acc, item) => acc + item.usedDays, 0);
+    const parts = allocation.items.map((item) => `${item.year} - ${item.usedDays} gün`);
+    const unallocatedText = allocation.unallocatedDays > 0 ? ` (Eksik ${allocation.unallocatedDays} gün)` : "";
+    return `${parts.join(" + ")} = Toplam ${usedTotal} gün${unallocatedText}`;
+  }, [allocation]);
 
-      const yearCount = leaveYears.filter((x) => x.year.trim()).length;
-      const yearsLabel = yearCount > 1 ? "yıllarına" : "yılına";
-      const fromLabel = yearCount > 1 ? "izinlerimden" : "iznimden";
-      return `${formatYearList(leaveYears.map((x) => x.year))} ${yearsLabel} ait ${fromLabel} ${totalLeave} gününü ${formatDateDot(
+  const finalRequestText = useMemo(() => {
+    const hasStartDate = Boolean(leaveStartDate.trim());
+    if (!hasStartDate || allocation.requestedDays <= 0) {
+      return "İzin başlangıç tarihi ve kullanılacak gün girildiğinde talep metni oluşacaktır.";
+    }
+
+    if (allocation.items.length === 0 || allocation.unallocatedDays > 0) {
+      return "Girilen izin günü mevcut bakiyeden fazla olduğu için talep metni oluşturulamadı.";
+    }
+
+    if (allocation.items.length === 1) {
+      const item = allocation.items[0];
+      return `${item.year} yılına ait iznimden ${item.usedDays} gününü ${formatDateDot(
         leaveStartDate,
         ".../.../...."
       )} tarihinden itibaren kullanmam için,`;
-    },
-    [leaveStartDate, leaveYears, totalLeave]
-  );
+    }
 
-  const finalRequestText = requestOverride.trim() || requestText;
+    return `${formatYearList(allocation.items.map((item) => item.year))} yıllarına ait izinlerimden toplam ${allocation.requestedDays} gününü ${formatDateDot(
+      leaveStartDate,
+      ".../.../...."
+    )} tarihinden itibaren kullanmam için,`;
+  }, [allocation, leaveStartDate]);
 
   const validation = useMemo(() => {
     const issues: string[] = [];
 
-    const remainingParsed = parseOptionalInteger(remainingLeave);
-    if (!remainingParsed.ok) {
-      issues.push("Kalan izin sayısal olmalı.");
-    } else if (remainingParsed.value !== null && remainingParsed.value < 0) {
-      issues.push("Kalan izin 0'dan küçük olamaz.");
+    const requestedParsed = parseOptionalInteger(requestedLeaveDays);
+    if (!requestedLeaveDays.trim()) {
+      issues.push("Kullanılacak izin günü girin.");
+    } else if (!requestedParsed.ok) {
+      issues.push("Kullanılacak izin günü sayısal olmalı.");
+    } else if ((requestedParsed.value ?? 0) <= 0) {
+      issues.push("Kullanılacak izin günü 0'dan büyük olmalı.");
     }
 
-    const remainingValue = remainingParsed.ok ? remainingParsed.value : null;
-    if (remainingValue !== null && totalLeave > remainingValue) {
-      issues.push("Talep edilen toplam gün, kalan izni aşıyor.");
+    if (!leaveStartDate.trim()) {
+      issues.push("İzin başlangıç tarihi girin.");
+    } else if (!parseLocalDate(leaveStartDate)) {
+      issues.push("İzin başlangıç tarihi geçersiz.");
+    }
+
+    if (requestedParsed.ok && requestedParsed.value !== null && requestedParsed.value > totalAvailableDays) {
+      issues.push("Kullanılacak izin günü toplam izin bakiyesinden fazla olamaz.");
     }
 
     const hasWorkStartDate = returnDate.trim().length > 0;
@@ -206,7 +279,7 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
       canDownload: issues.length === 0,
       message: issues[0] || "",
     };
-  }, [remainingLeave, returnDate, totalLeave]);
+  }, [leaveStartDate, requestedLeaveDays, returnDate, totalAvailableDays]);
 
   const handleDownloadPDF = async () => {
     if (!validation.canDownload) return;
@@ -216,21 +289,31 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
     setIsGeneratingPdf(false);
   };
 
+  const remainingLeaveAfter = useMemo(() => {
+    if (allocation.requestedDays <= 0) return null;
+    if (allocation.unallocatedDays > 0) return null;
+    return Math.max(0, totalAvailableDays - allocation.requestedDays);
+  }, [allocation.requestedDays, allocation.unallocatedDays, totalAvailableDays]);
+
   return {
     formData: {
       fullName, duty, leaveYears, leaveStartDate,
-      requestOverride, leaveAddress, returnDate, phone, substitutePerson,
-      staffSignDate, managerApprovalDate, remainingLeave, managerName, managerTitle
+      requestedLeaveDays, leaveAddress, returnDate, phone, substitutePerson,
+      staffSignDate, managerApprovalDate, managerName, managerTitle
     },
     handlers: {
       setFullName, setDuty, setLeaveYears,
-      setLeaveStartDate, setRequestOverride, setLeaveAddress, setReturnDate,
-      setPhone, setSubstitutePerson, setRemainingLeave,
+      setLeaveStartDate, setRequestedLeaveDays, setLeaveAddress, setReturnDate,
+      setPhone, setSubstitutePerson,
       handleDownloadPDF
     },
     computed: {
       leaveSummary,
       finalRequestText,
+      allocationPlan: allocation.items,
+      totalAvailableDays,
+      requestedLeaveTotal: allocation.requestedDays,
+      remainingLeaveAfter,
       isGeneratingPdf,
       serviceYears,
       entitlementDays,

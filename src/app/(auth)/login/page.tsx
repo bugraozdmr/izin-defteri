@@ -2,8 +2,8 @@
 
 import { ArrowRight, LockKeyhole, ShieldCheck, User2 } from "lucide-react";
 import { useActionState } from "react";
-import { loginAction } from "@/features/auth/actions/auth.action";
-import Logo from "@/components/ui/Logo";
+import { loginAction } from "@/features/auth/actions";
+import Logo from "@/shared/components/ui/Logo";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginAction, null);

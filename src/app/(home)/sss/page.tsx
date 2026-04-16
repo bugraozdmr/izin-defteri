@@ -1,7 +1,7 @@
 "use client";
 
 import { CircleQuestionMark, MessageCircleMore, Loader2 } from "lucide-react";
-import { useSSS } from "@/app/(home)/sss/hooks/useSSS";
+import { useSSS } from "@/features/sss/hooks";
 
 export default function HomeFaqPage() {
     const { faqList, isLoading } = useSSS();

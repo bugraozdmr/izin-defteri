@@ -1,9 +1,8 @@
 "use client";
 
 import { CalendarDays, Filter, Loader2, Calendar, Palmtree } from "lucide-react";
-import { UpcomingHoliday } from "@/app/(home)/tatiller/constants/tatiller.constants";
-import HolidayCard from "@/app/(home)/tatiller/components/HolidayCard";
-import { useTatiller } from "./hooks/useTatiller";
+import HolidayCard from "@/features/holiday/components/public/HolidayCard";
+import { useTatiller } from "@/features/holiday/hooks/public/hooks";
 
 export default function PublicHolidaysPage() {
   const {

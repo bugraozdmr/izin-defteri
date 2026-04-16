@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "@/components/layout/admin/Sidebar";
+import Sidebar from "@/shared/components/layout/admin/Sidebar";
 import { Menu } from "lucide-react";
-import Logo from "@/components/ui/Logo";
+import Logo from "@/shared/components/ui/Logo";
 import { Toaster } from "sonner";
 
 export default function DashboardLayout({

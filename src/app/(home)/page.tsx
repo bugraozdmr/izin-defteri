@@ -8,9 +8,9 @@ import {
   CalendarDays,
 } from "lucide-react";
 
-import { STEPS } from "@/constants/constants";
+import { STEPS } from "@/shared/constants/constants";
 import { formatHolidayDate } from "@/utils/helpers";
-import { useHome } from "@/hooks/useHome";
+import { useHome } from "@/shared/hooks/useHome";
 
 export default function HomePage() {
   const { upcomingHoliday, isLoadingHoliday } = useHome();

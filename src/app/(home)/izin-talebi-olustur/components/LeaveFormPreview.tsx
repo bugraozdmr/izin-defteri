@@ -69,7 +69,7 @@ export default function LeaveFormPreview({ formData, computed, handlers }: any) 
                 <p><span className="font-bold uppercase">İŞBAŞI TARİHİ:</span> {formatDateDot(formData.returnDate, ".../.../....")}</p>
                 <p><span className="font-bold uppercase">TEL:</span> {formData.phone}</p>
                 <p><span className="font-bold uppercase">YERİNE GÖREV ALACAK PERSONEL:</span> {formData.substitutePerson}</p>
-                <p><span className="font-bold uppercase">KALAN İZİN:</span> {formData.remainingLeave}</p>
+                <p><span className="font-bold uppercase">KALAN İZİN:</span> {typeof computed?.remainingLeaveAfter === "number" ? String(computed.remainingLeaveAfter) : "..."}</p>
               </div>
             </div>
           </div>
