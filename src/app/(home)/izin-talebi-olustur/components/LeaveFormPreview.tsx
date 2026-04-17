@@ -59,14 +59,14 @@ export default function LeaveFormPreview({ formData, computed, handlers }: any) 
               </div>
 
               <div className="mt-6 mb-8 ml-auto pr-2 text-right text-[14px]">
-                <p>{formData.staffSignDate}</p>
+                <p>.. / .. / ....</p>
                 <p className="mt-3">Personel Adı Soyadı</p>
                 <p className="mt-1 font-bold">{formData.fullName}</p>
               </div>
 
               <div className="mt-auto border-t border-black pt-2 text-[14px] leading-tight">
                 <p><span className="font-bold uppercase">İZİN ADRESİ:</span> {formData.leaveAddress}</p>
-                <p><span className="font-bold uppercase">İŞBAŞI TARİHİ:</span> {formatDateDot(formData.returnDate, ".../.../....")}</p>
+                <p><span className="font-bold uppercase">İŞE GİRİŞ TARİHİ:</span> {formatDateDot(formData.hireDate, ".../.../....")}</p>
                 <p><span className="font-bold uppercase">TEL:</span> {formData.phone}</p>
                 <p><span className="font-bold uppercase">YERİNE GÖREV ALACAK PERSONEL:</span> {formData.substitutePerson}</p>
                 <p><span className="font-bold uppercase">KALAN İZİN:</span> {typeof computed?.remainingLeaveAfter === "number" ? String(computed.remainingLeaveAfter) : "..."}</p>
@@ -76,7 +76,7 @@ export default function LeaveFormPreview({ formData, computed, handlers }: any) 
 
           <div className="mt-7 border border-black py-7 text-center text-[20px]">
             <p className="uppercase">UYGUNDUR</p>
-            <p className="mt-2 text-[16px]">{formData.managerApprovalDate}</p>
+            <p className="mt-2 text-[16px]">.. / .. / ....</p>
             <p className="mt-4 text-[17px]">{formData.managerName}</p>
             <p className="text-[16px]">{formData.managerTitle}</p>
           </div>

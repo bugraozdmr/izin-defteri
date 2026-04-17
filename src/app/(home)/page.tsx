@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 import { STEPS } from "@/shared/constants/constants";
-import { formatHolidayDate } from "@/utils/helpers";
+import { formatHolidayDate } from "@/shared/utils/helpers";
 import { useHome } from "@/shared/hooks/useHome";
 
 export default function HomePage() {

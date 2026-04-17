@@ -4,12 +4,9 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, ChevronDown, FileIcon, Loader2, Pencil, Search, Trash2, UserPlus, X } from "lucide-react";
-import { deleteLeaveRecordAction, updateLeaveRecordAction } from "@/features/leave/actions";
-import { formatDays } from "@/features/leave/helpers";
-import ConfirmDeleteModal from "@/shared/components/ui/ConfirmDeleteModal";
-import AdminLeaveRequestFormModal from "@/features/user/components/admin/AdminLeaveRequestFormModal";
-import type { LeaveFormInitialData } from "@/app/(home)/izin-talebi-olustur/hooks/useLeaveForm";
+import { Check, ChevronDown, Loader2, Plus, Search, UserPlus, X } from "lucide-react";
+import { createLeaveRecordAction } from "@/features/leave/actions";
+import DatePicker from "@/shared/components/ui/DatePicker";
 import { getUserNamesAction } from "@/features/user/actions";
 
 type PersonOption = {
@@ -18,81 +15,26 @@ type PersonOption = {
   isCustom?: boolean;
 };
 
-interface LeaveRow {
-  id: string;
-  startDate: string | Date;
-  endDate: string | Date;
-  days: number;
-  location?: string | null;
-  reason?: string | null;
-  tradedWith?: string | null;
-  manager?: string | null;
-  title?: string | null;
-  createdAt: string | Date;
-}
-
-interface LeaveTableProps {
+interface LeaveModalButtonProps {
   userId: string;
-  user: {
-    fullName: string;
-    jobTitle: string | null;
-    phone: string | null;
-    hireDate?: string | Date | null;
-  };
-  balances: Array<{ year: number; totalDays: number; usedDays: number }>;
-  leaves: LeaveRow[];
+  className?: string;
+  compact?: boolean;
 }
 
-function toDate(value: string | Date) {
-  return value instanceof Date ? value : new Date(value);
-}
-
-function toInputDate(value: string | Date) {
-  const date = toDate(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function toDotDate(value: string | Date) {
-  const input = toInputDate(value);
-  if (!input) return ".../.../....";
-  const [y, m, d] = input.split("-");
-  if (!y || !m || !d) return input;
-  return `${d}.${m}.${y}`;
-}
-
-function formatDateShort(value: string | Date) {
-  const date = toDate(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
-}
-
-function formatDateLong(value: string | Date) {
-  const date = toDate(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "long", year: "numeric" }).format(date);
-}
-
-export default function LeaveTable({ userId, user, balances, leaves }: LeaveTableProps) {
+export default function LeaveModalButton({ userId, className, compact = false }: LeaveModalButtonProps) {
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [mounted, setMounted] = useState(false);
-
-  const [pdfTarget, setPdfTarget] = useState<LeaveRow | null>(null);
-  const [isPdfOpen, setIsPdfOpen] = useState(false);
-
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [days, setDays] = useState("");
+
   const [location, setLocation] = useState("");
   const [reason, setReason] = useState("");
   const [tradedWith, setTradedWith] = useState("");
   const [manager, setManager] = useState("");
   const [title, setTitle] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
 
   const substituteDropdownRef = useRef<HTMLDivElement | null>(null);
   const substituteButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -105,15 +47,12 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
   const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false);
   const [newPersonName, setNewPersonName] = useState("");
 
-  const [deleteTarget, setDeleteTarget] = useState<LeaveRow | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (!editingId) return;
+    if (!isOpen) return;
 
     let active = true;
 
@@ -156,7 +95,7 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
       active = false;
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [editingId]);
+  }, [isOpen]);
 
   const allNameOptions = useMemo(() => {
     const unique = new Map<string, PersonOption>();
@@ -220,81 +159,23 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
   };
 
   useEffect(() => {
-    if (!pdfTarget) return;
-    const updated = leaves.find((item) => item.id === pdfTarget.id);
-    if (!updated) return;
-    setPdfTarget(updated);
-  }, [leaves, pdfTarget]);
+    if (!isOpen) return;
 
-  const pdfInitialData = useMemo<LeaveFormInitialData | undefined>(() => {
-    if (!pdfTarget) return undefined;
-
-    const sortedBalances = (balances ?? []).slice().sort((a, b) => a.year - b.year);
-    let remainingToAddBack = Number(pdfTarget.days) || 0;
-    const addBackByYear = new Map<number, number>();
-
-    for (const balance of sortedBalances.slice().reverse()) {
-      if (remainingToAddBack <= 0) break;
-      const used = Math.max(0, balance.usedDays ?? 0);
-      const addBack = Math.min(used, remainingToAddBack);
-      if (addBack <= 0) continue;
-      addBackByYear.set(balance.year, addBack);
-      remainingToAddBack -= addBack;
-    }
-
-    const leaveYears = sortedBalances.map((b) => {
-      const remainingNow = Math.max(0, (b.totalDays ?? 0) - (b.usedDays ?? 0));
-      const addBack = addBackByYear.get(b.year) ?? 0;
-      return {
-        year: String(b.year),
-        days: String(Math.max(0, remainingNow + addBack)),
-      };
-    });
-
-    return {
-      fullName: user.fullName ?? "",
-      duty: user.jobTitle ?? "",
-      phone: user.phone ?? "",
-
-      hireDate: user.hireDate ? toInputDate(user.hireDate) : undefined,
-
-      leaveYears,
-      leaveStartDate: toInputDate(pdfTarget.startDate),
-      requestedLeaveDays: String(pdfTarget.days ?? ""),
-      leaveAddress: String(pdfTarget.location ?? ""),
-      returnDate: toInputDate(pdfTarget.endDate),
-      substitutePerson: String(pdfTarget.tradedWith ?? ""),
-
-      staffSignDate: toDotDate(pdfTarget.createdAt),
-      managerApprovalDate: toDotDate(pdfTarget.createdAt),
-      managerName: pdfTarget.manager ?? undefined,
-      managerTitle: pdfTarget.title ?? undefined,
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isSaving) setIsOpen(false);
     };
-  }, [balances, pdfTarget, user.fullName, user.hireDate, user.jobTitle, user.phone]);
 
-  const editingRow = useMemo(
-    () => leaves.find((item) => item.id === editingId) ?? null,
-    [leaves, editingId]
-  );
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, isSaving]);
 
-  const handleOpenEdit = (row: LeaveRow) => {
-    setEditingId(row.id);
-    setStartDate(toInputDate(row.startDate));
-    setEndDate(toInputDate(row.endDate));
-    setDays(String(row.days));
-    setLocation(String(row.location ?? ""));
-    setReason(String(row.reason ?? ""));
-    setTradedWith(String(row.tradedWith ?? ""));
-    setManager(String(row.manager ?? ""));
-    setTitle(String(row.title ?? ""));
-  };
-
-  const handleCloseEdit = () => {
+  const closeModal = () => {
     if (isSaving) return;
-    setEditingId(null);
+    setIsOpen(false);
     setStartDate("");
     setEndDate("");
     setDays("");
+
     setLocation("");
     setReason("");
     setTradedWith("");
@@ -307,12 +188,11 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
     setNewPersonName("");
   };
 
-  const handleSubmitEdit = async (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!editingRow) return;
 
     if (!startDate || !endDate) {
-      toast.error("Başlangıç ve bitiş tarihi zorunludur.");
+      toast.error("Başlangıç ve bitiş tarihi seçin.");
       return;
     }
 
@@ -324,25 +204,21 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
 
     const start = new Date(startDate);
     const end = new Date(endDate);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-      toast.error("Tarih formatı geçersiz.");
-      return;
-    }
-
     if (start > end) {
       toast.error("Başlangıç tarihi bitiş tarihinden sonra olamaz.");
       return;
     }
 
     setIsSaving(true);
-    const toastId = toast.loading("İzin kaydı güncelleniyor...");
+    const toastId = toast.loading("İzin kaydı ekleniyor...");
 
     const normalizeOptional = (value: string) => {
       const trimmed = value.trim();
       return trimmed.length ? trimmed : undefined;
     };
+
     try {
-      const response = await updateLeaveRecordAction(editingRow.id, userId, {
+      const response = await createLeaveRecordAction(userId, {
         startDate: start,
         endDate: end,
         days: parsedDays,
@@ -355,54 +231,32 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
       });
 
       if (!response.success) {
-        throw new Error(response.message || "İzin kaydı güncellenemedi.");
+        throw new Error(response.message || "İzin kaydı eklenemedi.");
       }
 
-      toast.success("İzin kaydı güncellendi.", { id: toastId });
-      handleCloseEdit();
+      toast.success("İzin kaydı eklendi.", { id: toastId });
+      closeModal();
       router.refresh();
     } catch (error: any) {
-      toast.error(error?.message ? String(error.message) : "İzin kaydı güncellenemedi.", { id: toastId });
+      toast.error(error?.message ? String(error.message) : "İzin kaydı eklenemedi.", { id: toastId });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleOpenDelete = (row: LeaveRow) => {
-    setDeleteTarget(row);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteTarget) return;
-
-    setIsDeleting(true);
-    const toastId = toast.loading("İzin kaydı siliniyor...");
-    try {
-      const response = await deleteLeaveRecordAction(deleteTarget.id, userId);
-      if (!response.success) {
-        throw new Error(response.message || "İzin kaydı silinemedi.");
-      }
-
-      toast.success("İzin kaydı silindi.", { id: toastId });
-      setDeleteTarget(null);
-      router.refresh();
-    } catch (error: any) {
-      toast.error(error?.message ? String(error.message) : "İzin kaydı silinemedi.", { id: toastId });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const editModal = editingRow ? (
+  const modal = (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
-      <button type="button" onClick={handleCloseEdit} className="absolute inset-0" aria-label="Modalı kapat" />
+      <button type="button" onClick={closeModal} className="absolute inset-0" aria-label="Modalı kapat" />
 
       <div className="relative w-full max-w-md overflow-visible rounded-2xl border border-slate-200 bg-white shadow-[0_24px_60px_-30px_rgba(2,6,23,0.75)] dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-          <p className="text-sm font-black text-slate-900 dark:text-slate-100">İzin Kaydı Düzenle</p>
+          <div>
+            <p className="text-sm font-black text-slate-900 dark:text-slate-100">İzin Kaydı Ekle</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Başlangıç, bitiş ve izin günü girerek yeni kayıt oluştur.</p>
+          </div>
           <button
             type="button"
-            onClick={handleCloseEdit}
+            onClick={closeModal}
             disabled={isSaving}
             className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
           >
@@ -410,48 +264,50 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
           </button>
         </div>
 
-        <form onSubmit={handleSubmitEdit} className="space-y-4 p-5">
+        <form onSubmit={handleSubmit} className="space-y-4 p-5">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Başlangıç</label>
-              <input
-                type="date"
+              <DatePicker
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                onChange={setStartDate}
+                placeholder="Tarih seçin"
+                required
               />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Bitiş</label>
-              <input
-                type="date"
+              <DatePicker
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                onChange={setEndDate}
+                placeholder="Tarih seçin"
+                required
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Kullanılan Gün</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Kullanılacak Gün</label>
             <input
               type="number"
-              min={0}
+              min={1}
               step="0.5"
               value={days}
               onChange={(e) => setDays(e.target.value)}
+              placeholder="Örn: 5"
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
 
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Ek Bilgiler (Opsiyonel)</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Ek Bilgiler </p>
 
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">İzin Adresi</label>
               <input
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
+                placeholder="Örn: İstanbul"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
@@ -461,6 +317,7 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
               <input
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
+                placeholder="Örn: Yıllık izin"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
@@ -573,6 +430,7 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
                 <input
                   value={manager}
                   onChange={(e) => setManager(e.target.value)}
+                  placeholder="Ad Soyad"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                 />
               </div>
@@ -581,6 +439,7 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Örn: Müdür"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                 />
               </div>
@@ -590,7 +449,7 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
-              onClick={handleCloseEdit}
+              onClick={closeModal}
               disabled={isSaving}
               className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
@@ -599,7 +458,7 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
             <button
               type="submit"
               disabled={isSaving}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-sm font-bold text-white shadow-[0_14px_28px_-12px_rgba(2,132,199,0.9)] disabled:opacity-70"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-2.5 text-sm font-bold text-white shadow-[0_14px_28px_-12px_rgba(16,185,129,0.9)] disabled:opacity-70"
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {isSaving ? "Kaydediliyor..." : "Kaydet"}
@@ -608,7 +467,7 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
         </form>
       </div>
     </div>
-  ) : null;
+  );
 
   const addPersonModal = isAddPersonModalOpen ? (
     <div
@@ -664,109 +523,16 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
 
   return (
     <>
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800">
-        <div className="w-full overflow-x-auto">
-          <table className="min-w-[900px] w-full border-collapse">
-            <thead>
-              <tr className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-950/40 dark:text-slate-400">
-                <th className="px-4 py-3 text-left">Başlangıç</th>
-                <th className="px-4 py-3 text-left">Bitiş</th>
-                <th className="px-4 py-3 text-left">Kullanılan Gün</th>
-                <th className="px-4 py-3 text-left">Sistem Giriş</th>
-                <th className="px-4 py-3 text-left">İşlem</th>
-              </tr>
-            </thead>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        className={className ?? "inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-500 shadow-sm hover:bg-slate-50 hover:text-slate-700 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400"}
+      >
+        <Plus className="h-4 w-4" /> {compact ? "İzin" : "İzin Ekle"}
+      </button>
 
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-              {leaves.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-5 text-center text-sm text-slate-500 dark:text-slate-400">
-                    Henüz girilmiş bir izin kaydı yok.
-                  </td>
-                </tr>
-              ) : (
-                leaves.map((l) => (
-                  <tr
-                    key={l.id}
-                    className="text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/50"
-                  >
-                    <td className="px-4 py-3 font-semibold whitespace-nowrap">{formatDateShort(l.startDate)}</td>
-                    <td className="px-4 py-3 font-semibold whitespace-nowrap">{formatDateShort(l.endDate)}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="inline-flex items-center rounded-lg bg-emerald-500/10 px-2.5 py-1 font-black text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
-                        {formatDays(l.days)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">{formatDateLong(l.createdAt)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-start gap-2 whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPdfTarget(l);
-                            setIsPdfOpen(true);
-                          }}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-sky-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                          title="Form (PDF)"
-                        >
-                          <FileIcon className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(l)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-sky-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenDelete(l)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {editingRow && mounted ? createPortal(editModal, document.body) : null}
+      {isOpen && mounted ? createPortal(modal, document.body) : null}
       {mounted ? createPortal(addPersonModal, document.body) : null}
-
-      {mounted
-        ? createPortal(
-            <ConfirmDeleteModal
-              isOpen={!!deleteTarget}
-              title="İzin Kaydı Silinecek"
-              description={
-                <>
-                  <span className="font-bold text-slate-900 dark:text-white">{deleteTarget ? formatDateShort(deleteTarget.startDate) : "-"}</span>
-                  {" - "}
-                  <span className="font-bold text-slate-900 dark:text-white">{deleteTarget ? formatDateShort(deleteTarget.endDate) : "-"}</span>
-                  {" aralığındaki izin kaydı kalıcı olarak silinecektir. Onaylıyor musunuz?"}
-                </>
-              }
-              isDeleting={isDeleting}
-              onConfirm={handleConfirmDelete}
-              onCancel={() => setDeleteTarget(null)}
-            />,
-            document.body
-          )
-        : null}
-
-      <AdminLeaveRequestFormModal
-        isOpen={isPdfOpen}
-        initialData={pdfInitialData}
-        onClose={() => {
-          setIsPdfOpen(false);
-          setPdfTarget(null);
-        }}
-      />
     </>
   );
 }

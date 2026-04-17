@@ -7,7 +7,8 @@ import { useTheme } from "next-themes";
 import { 
   LayoutDashboard, CalendarDays, ClipboardList, 
   LogOut, ChevronLeft, ChevronRight, X, Sun, Moon, 
-  CircleQuestionMark
+  CircleQuestionMark,
+  UserIcon
 } from "lucide-react";
 import Logo from "@/shared/components/ui/Logo";
 
@@ -15,7 +16,8 @@ import { logoutAction } from "@/features/auth/actions";
 
 const menuItems = [
   // { name: "Genel Bakış", href: "/admin", icon: LayoutDashboard },
-  { name: "İzinler", href: "/admin/izinler", icon: ClipboardList },
+  { name: "Personeller", href: "/admin/personeller", icon: UserIcon },
+  // { name: "İzinler", href: "/admin/izinler", icon: ClipboardList },
   { name: "Sorular", href: "/admin/sss", icon: CircleQuestionMark },
   { name: "Tatil Takvimi", href: "/admin/tatiller", icon: CalendarDays },
 ];

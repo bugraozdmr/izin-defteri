@@ -1,26 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Leave } from "@/features/leave/types";
+import { UserFormPayload } from "@/features/user/types";
+import { User, UserTableRow } from "@/features/user/constants";
 import { 
-  getPaginatedLeavesAction,
-  createLeaveRecordAction,
-  updateLeaveRecordAction,
-  deleteLeaveRecordAction,
-} from "@/features/leave/actions";
+  getPaginatedUsersAction,
+  createUserAction,
+  updateUserAction,
+  deleteUserAction,
+  
+} from "@/features/user/actions";
 
-type LeaveRecordPayload = {
-  startDate: Date;
-  endDate: Date;
-  days: number;
-  location?: string;
-  reason?: string;
-  tradedWith?: string;
-  manager?: string;
-  title?: string;
-};
 
-export function useLeaveManagement(userId?: string) {
-  const [leaves, setLeaves] = useState<Leave[]>([]);
+export function useUserManagement() {
+  // const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserTableRow[]>([]);
+  
   const [isLoading, setIsLoading] = useState(true);
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,8 +25,8 @@ export function useLeaveManagement(userId?: string) {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Leave | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -43,13 +37,18 @@ export function useLeaveManagement(userId?: string) {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  const fetchLeaves = useCallback(async () => {
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     
-    const response = await getPaginatedLeavesAction(page, 20);
+    const response = await getPaginatedUsersAction({ 
+      page, 
+      limit: 20, 
+      searchTerm: debouncedSearch 
+    });
     
     if (response.success && response.data) {
-      setLeaves(response.data as unknown as Leave[]); 
+      // setUsers(response.data as unknown as User[]); 
+      setUsers(response.data as unknown as UserTableRow[]);
       setTotalPages(response.meta?.totalPages || 1);
       setTotalCount(response.meta?.totalCount || 0);
     }
@@ -57,42 +56,37 @@ export function useLeaveManagement(userId?: string) {
   }, [page, debouncedSearch]);
 
   useEffect(() => {
-    fetchLeaves();
-  }, [fetchLeaves]);
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleOpenCreate = () => {
     setModalMode("create");
-    setSelectedLeave(null);
+    setSelectedUser(null);
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (leave: Leave) => {
+  const handleOpenEdit = (user: User) => {
     setModalMode("edit");
-    setSelectedLeave(leave);
+    setSelectedUser(user);
     setIsModalOpen(true);
   };
 
-  const handleSaveLeave = async (payload: LeaveRecordPayload) => {
+  const handleSaveUser = async (payload: UserFormPayload) => {
     const toastId = toast.loading("İşlem yapılıyor, lütfen bekleyin...");
 
-    if (!userId) {
-      toast.error("Personel seçilmeden izin kaydı kaydedilemez.", { id: toastId });
-      return;
-    }
-
-    if (modalMode === "edit" && selectedLeave) {
-      const response = await updateLeaveRecordAction(selectedLeave.id, userId, payload);
+    if (modalMode === "edit" && selectedUser) {
+      const response = await updateUserAction(selectedUser.id, payload);
       if (response.success) {
-        await fetchLeaves();
+        await fetchUsers();
         setIsModalOpen(false);
-        toast.success("Personel izinleri başarıyla güncellendi!", { id: toastId });
+        toast.success("Personel bilgileri başarıyla güncellendi!", { id: toastId });
       } else {
         toast.error(response.message || "Güncelleme başarısız.", { id: toastId });
       }
     } else {
-      const response = await createLeaveRecordAction(userId, payload);
+      const response = await createUserAction(payload);
       if (response.success) {
-        await fetchLeaves();
+        await fetchUsers();
         setIsModalOpen(false);
         toast.success("Yeni personel sisteme eklendi!", { id: toastId });
       } else {
@@ -101,25 +95,20 @@ export function useLeaveManagement(userId?: string) {
     }
   };
 
-  const handleDeleteLeave = (id: string) => {
-    const target = leaves.find((item) => item.id === id) || null;
+  const handleDeleteUser = (id: string) => {
+    const target = users.find((item) => item.id === id) || null;
     setDeleteTarget(target);
   };
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
-
-    if (!userId) {
-      toast.error("Personel seçilmeden izin kaydı silinemez.");
-      return;
-    }
     
     setIsDeleting(true);
     const toastId = toast.loading("Personel kaydı siliniyor...");
-    const response = await deleteLeaveRecordAction(deleteTarget.id, userId);
+    const response = await deleteUserAction(deleteTarget.id);
     
     if (response.success) {
-      await fetchLeaves();
+      await fetchUsers();
       setDeleteTarget(null);
       toast.success("Personel kaydı başarıyla silindi.", { id: toastId });
     } else {
@@ -129,7 +118,7 @@ export function useLeaveManagement(userId?: string) {
   };
 
   return {
-    leaves,
+    users,
     searchTerm,
     setSearchTerm,
     page,
@@ -137,18 +126,18 @@ export function useLeaveManagement(userId?: string) {
     totalPages,
     totalCount,
     isLoading,
-    refreshLeaves: fetchLeaves,
+    refreshUsers: fetchUsers,
     isModalOpen,
     setIsModalOpen,
     modalMode,
-    selectedLeave,
+    selectedUser,
     deleteTarget,
     setDeleteTarget,
     isDeleting,
     handleOpenCreate,
     handleOpenEdit,
-    handleSaveLeave,
-    handleDeleteLeave,
+    handleSaveUser,
+    handleDeleteUser,
     handleConfirmDelete,
   };
 }

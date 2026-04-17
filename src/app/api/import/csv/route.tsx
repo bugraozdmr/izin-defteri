@@ -306,7 +306,7 @@ export async function POST(request: Request) {
 
 		if (createdCount > 0 || updatedCount > 0) {
 			revalidateTag("leave-data", "max");
-            revalidatePath("/admin/izinler");
+            revalidatePath("/admin/personeller");
 		}
 
 		return NextResponse.json(

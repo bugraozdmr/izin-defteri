@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, FileText, Search, UserPlus, X } from "lucide-react";
 import { makeId } from "@/app/(home)/izin-talebi-olustur/hooks/useLeaveForm";
-import { getAllLeaveNamesAction } from "@/features/leave/actions";
+import { getUserNamesAction } from "@/features/user/actions";
 import { toast } from "sonner";
+import DatePicker from "@/shared/components/ui/DatePicker";
 
 type ReadonlyField = "fullName" | "duty" | "returnDate";
 type HideableField = "fullName" | "duty" | "returnDate";
@@ -45,7 +46,7 @@ export default function LeaveFormSidebar({ formData, handlers, computed, readonl
     const loadNames = async () => {
       setIsLoadingNames(true);
       try {
-        const response = await getAllLeaveNamesAction();
+        const response = await getUserNamesAction();
         if (!mounted) return;
 
         if (response.success && Array.isArray(response.data)) {
@@ -183,13 +184,10 @@ export default function LeaveFormSidebar({ formData, handlers, computed, readonl
       {isHidden("returnDate") ? null : (
         <div>
           <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">İşbaşı Tarihi</label>
-          <input
-            type="date"
+          <DatePicker
             value={formData.returnDate}
-            onChange={(e) => handlers.setReturnDate(e.target.value)}
-            readOnly={isReadonly("returnDate")}
+            onChange={handlers.setReturnDate}
             disabled={isReadonly("returnDate")}
-            className={`${baseInputClass} ${isReadonly("returnDate") ? readonlyClass : ""}`}
           />
         </div>
       )}
@@ -233,11 +231,9 @@ export default function LeaveFormSidebar({ formData, handlers, computed, readonl
 
       <div>
         <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">İzin Başlangıç Tarihi</label>
-        <input
-          type="date"
+        <DatePicker
           value={formData.leaveStartDate}
-          onChange={(e) => handlers.setLeaveStartDate(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950"
+          onChange={handlers.setLeaveStartDate}
         />
       </div>
 
@@ -410,6 +406,31 @@ export default function LeaveFormSidebar({ formData, handlers, computed, readonl
               </div>
             </div>
           ) : null}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-950/40">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Uygundur</p>
+        <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Onaylayan kişi bilgileri PDF çıktısında görünür.</p>
+
+        <div className="mt-3 space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">Yönetici Adı Soyadı</label>
+            <input
+              value={formData.managerName ?? ""}
+              onChange={(e) => handlers.setManagerName(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">Ünvan</label>
+            <input
+              value={formData.managerTitle ?? ""}
+              onChange={(e) => handlers.setManagerTitle(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950"
+            />
+          </div>
         </div>
       </div>
 

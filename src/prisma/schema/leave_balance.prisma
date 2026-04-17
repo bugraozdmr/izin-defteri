@@ -1,21 +1,17 @@
-model Leave {
+model LeaveBalance {
   id         String   @id @default(cuid())
 
   userId     String
   user       User     @relation(fields: [userId], references: [id])
 
-  startDate  DateTime
-  endDate    DateTime
+  year       Int
 
-  location   String?
-  reason     String?
-  tradedWith String?
-  manager   String?
-  title     String?
-
-  days       Float
+  totalDays  Float
+  usedDays   Float    @default(0)
 
   allocations LeaveAllocation[]
 
   createdAt  DateTime @default(now())
+
+  @@unique([userId, year])
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { generatePDF } from "@/lib/pdf";
 
 export type LeaveYearItem = {
@@ -15,6 +15,7 @@ export type LeaveFormInitialData = {
   requestedLeaveDays?: string;
   leaveAddress?: string;
   returnDate?: string;
+  hireDate?: string;
   phone?: string;
   substitutePerson?: string;
   staffSignDate?: string;
@@ -122,22 +123,83 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
   const [substitutePerson, setSubstitutePerson] = useState(initialData?.substitutePerson ?? "");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
+  const initialSignature = useMemo(() => {
+    if (!initialData) return null;
+    const yearsSig = (initialData.leaveYears ?? [])
+      .map((item) => `${String(item.year ?? "").trim()}:${String(item.days ?? "").trim()}`)
+      .join(",");
+
+    return [
+      initialData.fullName ?? "",
+      initialData.duty ?? "",
+      initialData.phone ?? "",
+      initialData.leaveStartDate ?? "",
+      initialData.requestedLeaveDays ?? "",
+      initialData.leaveAddress ?? "",
+      initialData.returnDate ?? "",
+      initialData.hireDate ?? "",
+      initialData.substitutePerson ?? "",
+      initialData.managerName ?? "",
+      initialData.managerTitle ?? "",
+      yearsSig,
+    ].join("|");
+  }, [initialData]);
+
+  const lastAppliedSignature = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!initialData) return;
+    if (!initialSignature) return;
+    if (lastAppliedSignature.current === initialSignature) return;
+
+    lastAppliedSignature.current = initialSignature;
+
+    setFullName(initialData.fullName ?? "");
+    setDuty(initialData.duty ?? "");
+    setLeaveStartDate(initialData.leaveStartDate ?? "");
+    setRequestedLeaveDays(initialData.requestedLeaveDays ?? "");
+    setLeaveAddress(initialData.leaveAddress ?? "");
+    setReturnDate(initialData.returnDate ?? "");
+    setPhone(initialData.phone ?? "");
+    setSubstitutePerson(initialData.substitutePerson ?? "");
+
+    const source = initialData.leaveYears ?? [];
+    const mapped = source
+      .filter((item) => String(item.year ?? "").trim().length > 0 || String(item.days ?? "").trim().length > 0)
+      .map((item) => ({
+        id: makeId(),
+        year: String(item.year ?? "").trim(),
+        days: String(item.days ?? "").trim(),
+      }));
+
+    setLeaveYears(
+      mapped.length > 0
+        ? mapped
+        : [
+            { id: makeId(), year: "", days: "" },
+            { id: makeId(), year: "", days: "" },
+          ]
+    );
+  }, [initialData, initialSignature]);
+
   const currentYear = new Date().getFullYear();
   const staffSignDate = initialData?.staffSignDate ?? `.../.../${currentYear}`;
   const managerApprovalDate = initialData?.managerApprovalDate ?? `.../.../${currentYear}`;
 
-  const managerName = initialData?.managerName ?? "M. Kübra KAHRAMAN";
-  const managerTitle = initialData?.managerTitle ?? "Müdür";
+  const [managerName, setManagerName] = useState(initialData?.managerName ?? "M. Kübra KAHRAMAN");
+  const [managerTitle, setManagerTitle] = useState(initialData?.managerTitle ?? "Müdür");
 
   const totalLeave = useMemo(() => {
     return leaveYears.reduce((acc, item) => acc + parseInteger(item.days), 0);
   }, [leaveYears]);
 
+  const hireDate = initialData?.hireDate;
+
   const serviceYears = useMemo(() => {
-    const parsed = parseLocalDate(returnDate);
+    const parsed = parseLocalDate(hireDate ?? "");
     if (!parsed) return null;
     return getFullYearsSince(parsed, new Date());
-  }, [returnDate]);
+  }, [hireDate]);
 
   const entitlementDays = useMemo(() => {
     if (serviceYears === null) return null;
@@ -260,9 +322,9 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
       issues.push("Kullanılacak izin günü toplam izin bakiyesinden fazla olamaz.");
     }
 
-    const hasWorkStartDate = returnDate.trim().length > 0;
-    if (hasWorkStartDate) {
-      const parsedHire = parseLocalDate(returnDate);
+    const hasHireDate = Boolean(hireDate && hireDate.trim().length > 0);
+    if (hasHireDate) {
+      const parsedHire = parseLocalDate(hireDate ?? "");
       if (!parsedHire) {
         issues.push("İşe giriş tarihi geçersiz.");
       } else {
@@ -279,7 +341,7 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
       canDownload: issues.length === 0,
       message: issues[0] || "",
     };
-  }, [leaveStartDate, requestedLeaveDays, returnDate, totalAvailableDays]);
+  }, [leaveStartDate, requestedLeaveDays, hireDate, totalAvailableDays]);
 
   const handleDownloadPDF = async () => {
     if (!validation.canDownload) return;
@@ -298,13 +360,14 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
   return {
     formData: {
       fullName, duty, leaveYears, leaveStartDate,
-      requestedLeaveDays, leaveAddress, returnDate, phone, substitutePerson,
+      requestedLeaveDays, leaveAddress, returnDate, hireDate, phone, substitutePerson,
       staffSignDate, managerApprovalDate, managerName, managerTitle
     },
     handlers: {
       setFullName, setDuty, setLeaveYears,
       setLeaveStartDate, setRequestedLeaveDays, setLeaveAddress, setReturnDate,
       setPhone, setSubstitutePerson,
+      setManagerName, setManagerTitle,
       handleDownloadPDF
     },
     computed: {

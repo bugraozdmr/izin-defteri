@@ -1,0 +1,18 @@
+model LeaveAllocation {
+  id        String   @id @default(cuid())
+
+  leaveId   String
+  leave     Leave    @relation(fields: [leaveId], references: [id], onDelete: Cascade)
+
+  balanceId String
+  balance   LeaveBalance @relation(fields: [balanceId], references: [id], onDelete: Restrict)
+
+  year      Int
+  days      Float
+
+  createdAt DateTime @default(now())
+
+  @@unique([leaveId, balanceId])
+  @@index([leaveId])
+  @@index([balanceId])
+}
