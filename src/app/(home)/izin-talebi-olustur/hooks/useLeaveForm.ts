@@ -20,8 +20,8 @@ export type LeaveFormInitialData = {
   substitutePerson?: string;
   staffSignDate?: string;
   managerApprovalDate?: string;
-  managerName?: string;
-  managerTitle?: string;
+  manager?: string;
+  title?: string;
 };
 
 export function makeId() {
@@ -139,8 +139,8 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
       initialData.returnDate ?? "",
       initialData.hireDate ?? "",
       initialData.substitutePerson ?? "",
-      initialData.managerName ?? "",
-      initialData.managerTitle ?? "",
+      initialData.manager ?? "",
+      initialData.title ?? "",
       yearsSig,
     ].join("|");
   }, [initialData]);
@@ -162,6 +162,8 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
     setReturnDate(initialData.returnDate ?? "");
     setPhone(initialData.phone ?? "");
     setSubstitutePerson(initialData.substitutePerson ?? "");
+    setManagerName(initialData.manager ?? "M. Kübra KAHRAMAN");
+    setManagerTitle(initialData.title ?? "Müdür");
 
     const source = initialData.leaveYears ?? [];
     const mapped = source
@@ -186,8 +188,8 @@ export const useLeaveForm = (initialData?: LeaveFormInitialData) => {
   const staffSignDate = initialData?.staffSignDate ?? `.../.../${currentYear}`;
   const managerApprovalDate = initialData?.managerApprovalDate ?? `.../.../${currentYear}`;
 
-  const [managerName, setManagerName] = useState(initialData?.managerName ?? "M. Kübra KAHRAMAN");
-  const [managerTitle, setManagerTitle] = useState(initialData?.managerTitle ?? "Müdür");
+  const [managerName, setManagerName] = useState(initialData?.manager ?? "M. Kübra KAHRAMAN");
+  const [managerTitle, setManagerTitle] = useState(initialData?.title ?? "Müdür");
 
   const totalLeave = useMemo(() => {
     return leaveYears.reduce((acc, item) => acc + parseInteger(item.days), 0);

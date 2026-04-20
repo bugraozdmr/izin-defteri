@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { getUpcomingHolidaysAction } from "@/features/holiday/actions";
+import { getHolidaysForYearAction } from "@/features/holiday/actions";
 import { UpcomingHoliday } from "@/features/holiday/constants";
 
 export function useTatiller() {
@@ -11,7 +11,8 @@ export function useTatiller() {
     const fetchHolidays = async () => {
       try {
         setIsLoading(true);
-        const response = await getUpcomingHolidaysAction();
+        const currentYear = new Date().getFullYear();
+        const response = await getHolidaysForYearAction(currentYear);
         if (response.success && response.data) {
           setHolidays(response.data as unknown as UpcomingHoliday[]);
         }
@@ -26,13 +27,15 @@ export function useTatiller() {
   }, []);
 
   const filteredHolidays = useMemo(() => {
-    const currentYear = new Date().getFullYear();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     return holidays.filter((holiday) => {
       if (viewMode === "all") return true;
       
       const hDate = new Date(holiday.nextDate);
-      return hDate.getFullYear() === currentYear;
+      hDate.setHours(0, 0, 0, 0);
+      return hDate.getTime() >= today.getTime();
     });
   }, [holidays, viewMode]);
 

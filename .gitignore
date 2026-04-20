@@ -44,3 +44,5 @@ next-env.d.ts
 notes.md
 note_new.md
 save.sql
+
+temp/

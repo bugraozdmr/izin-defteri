@@ -26,7 +26,7 @@ export default function Navbar() {
         // { href: "/sorgula", label: "Sorgula" },
         { href: "/tatiller", label: "Tatiller" },
         { href: "/sss", label: "SSS" },
-        { href: "/izin-talebi-olustur", label: "İzin Formu Oluştur" },
+        // { href: "/izin-talebi-olustur", label: "İzin Formu Oluştur" },
     ];
 
     return (

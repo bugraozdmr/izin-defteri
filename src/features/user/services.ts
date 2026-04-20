@@ -15,9 +15,20 @@ export const userService = {
   },
 
   async deleteUser(id: string) {
-    return await db.user.delete({
-      where: { id }
-    });
+    return await db.$transaction([
+      db.leaveAllocation.deleteMany({
+        where: { leave: { userId: id } }
+      }),
+      db.leave.deleteMany({
+        where: { userId: id }
+      }),
+      db.leaveBalance.deleteMany({
+        where: { userId: id }
+      }),
+      db.user.delete({
+        where: { id }
+      })
+    ]);
   },
 
   async getAllUsers(year: number = new Date().getFullYear()) {

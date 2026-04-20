@@ -12,7 +12,7 @@ export async function loginAction(prevState: any, formData: FormData) {
     password === process.env.ADMIN_PASSWORD
   ) {
     await createSession();
-    redirect("/admin");
+    redirect("/admin/personeller");
   } else {
     return { error: "Kullanıcı adı veya şifre hatalı!" };
   }

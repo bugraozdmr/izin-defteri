@@ -14,11 +14,11 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const importType = useMemo<"excel" | "csv" | null>(() => {
+  const importType = useMemo<"json" | "csv" | null>(() => {
     if (!importFile) return null;
     const name = importFile.name.toLowerCase();
     if (name.endsWith(".csv")) return "csv";
-    if (name.endsWith(".xlsx")) return "excel";
+    if (name.endsWith(".json")) return "json";
     return null;
   }, [importFile]);
 
@@ -41,8 +41,8 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
   const acceptImportFile = (file: File | null | undefined) => {
     if (!file) return;
     const name = file.name.toLowerCase();
-    if (!name.endsWith(".csv") && !name.endsWith(".xlsx")) {
-      toast.error("Sadece CSV (.csv) veya Excel (.xlsx) dosyası yükleyebilirsiniz.");
+    if (!name.endsWith(".csv") && !name.endsWith(".json")) {
+      toast.error("Sadece CSV (.csv) veya JSON (.json) dosyası yükleyebilirsiniz.");
       return;
     }
     setImportFile(file);
@@ -115,7 +115,7 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
             ref={fileInputRef}
             type="file"
             className="hidden"
-            accept=".csv,.xlsx"
+            accept=".csv,.json"
             onChange={(e) => acceptImportFile(e.target.files?.[0])}
           />
 
@@ -133,7 +133,7 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
             <div className="mt-4 text-sm font-bold text-slate-900 dark:text-slate-100">
               {importFile ? importFile.name : "Dosyayı buraya sürükleyin veya tıklayın"}
             </div>
-            
+
             {importFile && (
               <button
                 type="button"

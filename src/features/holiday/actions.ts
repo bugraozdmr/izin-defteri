@@ -15,6 +15,16 @@ export async function getUpcomingHolidaysAction(fromDateStr?: string) {
   }
 }
 
+export async function getHolidaysForYearAction(year: number) {
+  try {
+    const holidays = await holidayService.getHolidaysForYear(year);
+    return { success: true, data: holidays };
+  } catch (error) {
+    console.error("Yılın tatilleri çekilirken hata:", error);
+    return { success: false, message: "Tatiller listelenemedi." };
+  }
+}
+
 export async function getAllHolidaysAction() {
   try {
     const holidays = await holidayService.getAllHolidays();

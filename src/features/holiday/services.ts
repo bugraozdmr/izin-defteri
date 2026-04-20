@@ -18,6 +18,23 @@ export const holidayService = {
     }
   ),
 
+  async getHolidaysForYear(year: number) {
+    const allHolidays = await this.getCachedAllHolidays();
+
+    const holidaysThisYear = allHolidays.map(holiday => {
+      if (holiday.year && holiday.year !== year) return null;
+
+      const dateThisYear = new Date(year, holiday.month - 1, holiday.day);
+      
+      return { 
+        ...holiday, 
+        nextDate: dateThisYear
+      }; 
+    }).filter(h => h !== null);
+
+    return holidaysThisYear.sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime());
+  },
+
   async getAllHolidays() {
     return await this.getCachedAllHolidays();
   },

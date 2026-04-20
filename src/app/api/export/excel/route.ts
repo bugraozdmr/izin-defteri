@@ -1,79 +1,16 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { db } from "@/lib/db";
+import { getExportDataAction } from "@/features/api/actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type LeaveYearRow = { year: string; days: number };
-
-const TR_MONTHS_UPPER = [
-  "OCAK",
-  "ŞUBAT",
-  "MART",
-  "NİSAN",
-  "MAYIS",
-  "HAZİRAN",
-  "TEMMUZ",
-  "AĞUSTOS",
-  "EYLÜL",
-  "EKİM",
-  "KASIM",
-  "ARALIK",
-];
-
-function formatEntryDate(value: unknown) {
-  if (!value) return "-";
-  const d = value instanceof Date ? value : new Date(String(value));
-  if (Number.isNaN(d.getTime())) return "-";
-  const month = TR_MONTHS_UPPER[d.getMonth()] ?? "";
-  const year = d.getFullYear();
-  return `${month} ${year} GİRİŞ`.trim();
-}
-
-function normalizeLeaveYears(value: unknown): LeaveYearRow[] {
-  if (!value) return [];
-
-  if (Array.isArray(value)) {
-    return value
-      .filter(Boolean)
-      .map((item: any) => ({
-        year: String(item?.year ?? "").trim(),
-        days: Number(item?.days ?? 0) || 0,
-      }))
-      .filter((x) => x.year);
-  }
-
-  if (typeof value === "object") {
-    const obj: any = value;
-    const candidate = obj.leaveYears ?? obj.leaves ?? obj.years ?? obj.items ?? obj;
-    if (Array.isArray(candidate)) return normalizeLeaveYears(candidate);
-    if (candidate && typeof candidate === "object") {
-      return Object.entries(candidate)
-        .map(([year, days]) => ({ year: String(year).trim(), days: Number(days) || 0 }))
-        .filter((x) => x.year);
-    }
-    return [];
-  }
-
-  if (typeof value === "string") {
-    try {
-      return normalizeLeaveYears(JSON.parse(value));
-    } catch {
-      return [];
-    }
-  }
-
-  return [];
-}
-
 export async function GET() {
   try {
-    const leaves = await db.leave.findMany({
-      orderBy: {
-        fullName: "asc",
-      },
-    });
+    const actionResult = await getExportDataAction();
+    if (!actionResult.success) {
+      throw new Error("Veri çekilemedi.");
+    }
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Personel İzinleri");
@@ -83,13 +20,14 @@ export async function GET() {
     worksheet.columns = [
       { header: "NO", key: "no", width: 8 },
       { header: "ADI SOYADI", key: "fullName", width: 30 },
-      { header: "KALAN İZİNLERİ", key: "leaveDetails", width: 45 },
-      { header: "TOPLAM", key: "total", width: 15 },
+      { header: "ÜNVANI", key: "jobTitle", width: 25 },
+      { header: "TELEFON", key: "phone", width: 18 },
+      { header: "KALAN GÜN SAYISI", key: "totalDays", width: 20 },
       { header: "GİRİŞ TARİHİ", key: "entryDate", width: 25 },
     ];
 
     worksheet.insertRow(1, []);
-    worksheet.mergeCells("A1:E1");
+    worksheet.mergeCells("A1:F1");
     const titleCell = worksheet.getCell("A1");
     titleCell.value = "KÜLTÜR VE SOSYAL İŞLER MÜDÜRLÜĞÜ PERSONEL KALAN İZİN GÜNLERİ";
     titleCell.font = { bold: true, size: 14 };
@@ -113,25 +51,14 @@ export async function GET() {
       };
     });
 
-    leaves.forEach((leave, index) => {
-      const years = normalizeLeaveYears((leave as any).leaves)
-        .filter((x) => x.year)
-        .sort((a, b) => Number(a.year) - Number(b.year));
-
-      const formattedLeaveDetails = years
-        .map((y) => `${y.year}(${y.days} GÜN)`)
-        .join("+");
-
-      const totalDays = typeof (leave as any).totalDays === "number"
-        ? (leave as any).totalDays
-        : years.reduce((acc, curr) => acc + (Number(curr.days) || 0), 0);
-
+    actionResult.data.forEach((item: any) => {
       worksheet.addRow({
-        no: index + 1,
-        fullName: leave.fullName?.toUpperCase() || "BİLİNMİYOR",
-        leaveDetails: formattedLeaveDetails || "-",
-        total: totalDays,
-        entryDate: formatEntryDate(leave.hireDate),
+        no: item.no,
+        fullName: item.fullName,
+        jobTitle: item.jobTitle,
+        phone: item.phone,
+        totalDays: item.totalDays,
+        entryDate: item.entryDateText, // Since user says 'excel only' using entryDateText keeps EXCEL layout matching previous request
       });
     });
 
@@ -139,9 +66,10 @@ export async function GET() {
 
     worksheet.getColumn(1).alignment = { vertical: "middle", horizontal: "center" };
     worksheet.getColumn(2).alignment = { vertical: "middle", horizontal: "left" };
-    worksheet.getColumn(3).alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+    worksheet.getColumn(3).alignment = { vertical: "middle", horizontal: "left" };
     worksheet.getColumn(4).alignment = { vertical: "middle", horizontal: "center" };
     worksheet.getColumn(5).alignment = { vertical: "middle", horizontal: "center" };
+    worksheet.getColumn(6).alignment = { vertical: "middle", horizontal: "center" };
 
     worksheet.eachRow((row, rowNumber) => {
       row.eachCell((cell) => {
@@ -168,7 +96,7 @@ export async function GET() {
           });
         }
 
-        const totalCell = row.getCell(4);
+        const totalCell = row.getCell(3);
         totalCell.numFmt = "0";
       }
     });

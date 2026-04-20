@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Check, ChevronDown, FileIcon, Loader2, Pencil, Search, Trash2, UserPlus, X } from "lucide-react";
 import { deleteLeaveRecordAction, updateLeaveRecordAction } from "@/features/leave/actions";
-import { formatDays } from "@/features/leave/helpers";
+import { formatDays, calculateEndDateSkippingHolidays } from "@/features/leave/helpers";
 import ConfirmDeleteModal from "@/shared/components/ui/ConfirmDeleteModal";
 import AdminLeaveRequestFormModal from "@/features/user/components/admin/AdminLeaveRequestFormModal";
 import type { LeaveFormInitialData } from "@/app/(home)/izin-talebi-olustur/hooks/useLeaveForm";
 import { getUserNamesAction } from "@/features/user/actions";
+import { getAllHolidaysAction } from "@/features/holiday/actions";
 
 type PersonOption = {
   id: string;
@@ -108,9 +109,37 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
   const [deleteTarget, setDeleteTarget] = useState<LeaveRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [allHolidays, setAllHolidays] = useState<any[] | null>(null);
+
   useEffect(() => {
     setMounted(true);
+    let active = true;
+    
+    getAllHolidaysAction().then((res) => {
+      if (active) {
+        if (res.success && res.data) {
+          setAllHolidays(res.data);
+        } else {
+          setAllHolidays([]);
+        }
+      }
+    });
+
+    return () => {
+      active = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!startDate || !days || allHolidays === null) return;
+    const pDays = Number.parseFloat(days);
+    if (!Number.isFinite(pDays) || pDays <= 0) return;
+    
+    const calcEnd = calculateEndDateSkippingHolidays(startDate, pDays, allHolidays);
+    if (calcEnd) {
+      setEndDate(calcEnd);
+    }
+  }, [startDate, days, allHolidays]);
 
   useEffect(() => {
     if (!editingId) return;
@@ -267,8 +296,8 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
 
       staffSignDate: toDotDate(pdfTarget.createdAt),
       managerApprovalDate: toDotDate(pdfTarget.createdAt),
-      managerName: pdfTarget.manager ?? undefined,
-      managerTitle: pdfTarget.title ?? undefined,
+      manager: pdfTarget.manager ?? undefined,
+      title: pdfTarget.title ?? undefined,
     };
   }, [balances, pdfTarget, user.fullName, user.hireDate, user.jobTitle, user.phone]);
 
@@ -422,7 +451,21 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Bitiş</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Kullanılan Gün</label>
+              <input
+                type="number"
+                min={0}
+                step="0.5"
+                value={days}
+                onChange={(e) => setDays(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              />
+            </div>
+          </div>
+
+          {days && Number(days) > 0 ? (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">İşbaşı (Bitiş)</label>
               <input
                 type="date"
                 value={endDate}
@@ -430,19 +473,7 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Kullanılan Gün</label>
-            <input
-              type="number"
-              min={0}
-              step="0.5"
-              value={days}
-              onChange={(e) => setDays(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-            />
-          </div>
+          ) : null}
 
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Ek Bilgiler (Opsiyonel)</p>

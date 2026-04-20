@@ -8,6 +8,8 @@ import { Check, ChevronDown, Loader2, Plus, Search, UserPlus, X } from "lucide-r
 import { createLeaveRecordAction } from "@/features/leave/actions";
 import DatePicker from "@/shared/components/ui/DatePicker";
 import { getUserNamesAction } from "@/features/user/actions";
+import { getAllHolidaysAction } from "@/features/holiday/actions";
+import { calculateEndDateSkippingHolidays } from "@/features/leave/helpers";
 
 type PersonOption = {
   id: string;
@@ -47,9 +49,37 @@ export default function LeaveModalButton({ userId, className, compact = false }:
   const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false);
   const [newPersonName, setNewPersonName] = useState("");
 
+  const [allHolidays, setAllHolidays] = useState<any[] | null>(null);
+
   useEffect(() => {
     setMounted(true);
+    let active = true;
+
+    getAllHolidaysAction().then((res) => {
+      if (active) {
+        if (res.success && res.data) {
+          setAllHolidays(res.data);
+        } else {
+          setAllHolidays([]);
+        }
+      }
+    });
+
+    return () => {
+      active = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!startDate || !days || allHolidays === null) return;
+    const pDays = Number.parseFloat(days);
+    if (!Number.isFinite(pDays) || pDays <= 0) return;
+
+    const calcEnd = calculateEndDateSkippingHolidays(startDate, pDays, allHolidays);
+    if (calcEnd) {
+      setEndDate(calcEnd);
+    }
+  }, [startDate, days, allHolidays]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -276,28 +306,30 @@ export default function LeaveModalButton({ userId, className, compact = false }:
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Bitiş</label>
-              <DatePicker
-                value={endDate}
-                onChange={setEndDate}
-                placeholder="Tarih seçin"
-                required
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Kullanılacak Gün</label>
+              <input
+                type="number"
+                min={1}
+                step="0.5"
+                value={days}
+                onChange={(e) => setDays(e.target.value)}
+                placeholder="Örn: 5"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Kullanılacak Gün</label>
-            <input
-              type="number"
-              min={1}
-              step="0.5"
-              value={days}
-              onChange={(e) => setDays(e.target.value)}
-              placeholder="Örn: 5"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-            />
-          </div>
+          {days && Number(days) > 0 ? (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">İşbaşı</label>
+              <DatePicker
+                value={endDate}
+                onChange={setEndDate}
+                placeholder="Otomatik hesaplanır..."
+                required
+              />
+            </div>
+          ) : null}
 
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Ek Bilgiler </p>
@@ -355,9 +387,8 @@ export default function LeaveModalButton({ userId, className, compact = false }:
 
                 {isNameOpen ? (
                   <div
-                    className={`absolute z-[130] w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_45px_-28px_rgba(2,6,23,0.65)] dark:border-slate-700 dark:bg-slate-900 ${
-                      openUpward ? "bottom-full mb-2" : "top-full mt-2"
-                    }`}
+                    className={`absolute z-[130] w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_45px_-28px_rgba(2,6,23,0.65)] dark:border-slate-700 dark:bg-slate-900 ${openUpward ? "bottom-full mb-2" : "top-full mt-2"
+                      }`}
                   >
                     <div className="border-b border-slate-200 p-2 dark:border-slate-700">
                       <div className="relative">
