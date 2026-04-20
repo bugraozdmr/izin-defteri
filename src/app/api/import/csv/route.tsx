@@ -142,7 +142,14 @@ export async function POST(request: Request) {
 			return NextResponse.json({ error: "ADI SOYADI sütunu bulunamadı." }, { status: 400 });
 		}
 
-        const importDataPayload: Array<{ fullName: string; jobTitle?: string | null; phone?: string | null; hireDate: string | null; leavesByYear: Record<string, number> }> = [];
+        const importDataPayload: Array<{ 
+            fullName: string; 
+            jobTitle?: string | null; 
+            phone?: string | null; 
+            hireDate: string | null; 
+            leavesByYear: Record<string, number>;
+            usedLeaves?: Array<{ startDate: string, endDate: string, days: number, reason?: string, location?: string, tradedWith?: string, manager?: string, title?: string }>;
+        }> = [];
 
 		for (let i = 1; i < lines.length; i++) {
 			const cols = parseCsvLine(lines[i]);
@@ -154,12 +161,24 @@ export async function POST(request: Request) {
 			const leavesByYear = idxLeaveDetails != null ? parseLeaveDetailsJson(cols[idxLeaveDetails]) : {};
 			const hireDate = idxEntryDate != null ? parseStandardDate(cols[idxEntryDate]) : null;
 
+            let usedLeaves: any[] = [];
+            const idxUsedLeaves = headerMap.get("KULLANILAN İZİNLER DETAY");
+            if (idxUsedLeaves != null) {
+                const usedLeavesStr = String(cols[idxUsedLeaves] ?? "").trim();
+                if (usedLeavesStr && usedLeavesStr.startsWith("[")) {
+                    try {
+                        usedLeaves = JSON.parse(usedLeavesStr);
+                    } catch { /* empty */ }
+                }
+            }
+
             importDataPayload.push({
                 fullName: rawName,
                 jobTitle,
                 phone,
                 hireDate: hireDate ? hireDate.toISOString() : null,
-                leavesByYear
+                leavesByYear,
+                usedLeaves
             });
 		}
 

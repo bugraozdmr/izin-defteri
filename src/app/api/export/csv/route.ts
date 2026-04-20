@@ -17,7 +17,7 @@ export async function GET() {
 		}
 
 		const delimiter = ";";
-		const header = ["NO", "ADI SOYADI", "ÜNVANI", "TELEFON", "KALAN İZİNLERİ DETAY", "TOPLAM GÜN", "GİRİŞ TARİHİ"].map(csvEscape).join(delimiter);
+		const header = ["NO", "ADI SOYADI", "ÜNVANI", "TELEFON", "KALAN İZİNLERİ DETAY", "TOPLAM GÜN", "GİRİŞ TARİHİ", "KULLANILAN İZİNLER DETAY"].map(csvEscape).join(delimiter);
 
 		const rows = actionResult.data.map((item: any) => {
 			return [
@@ -28,6 +28,7 @@ export async function GET() {
 				item.leaveDetails,
 				item.totalDays,
 				item.entryDate,
+                item.usedLeavesJson,
 			]
 				.map(csvEscape)
 				.join(delimiter);

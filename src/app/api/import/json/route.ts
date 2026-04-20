@@ -47,7 +47,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Geçersiz JSON formatı. 'data' dizisi gereklidir." }, { status: 400 });
         }
 
-        const importDataPayload: Array<{ fullName: string; jobTitle?: string | null; phone?: string | null; hireDate: string | null; leavesByYear: Record<string, number> }> = [];
+        const importDataPayload: Array<{ 
+            fullName: string; 
+            jobTitle?: string | null; 
+            phone?: string | null; 
+            hireDate: string | null; 
+            leavesByYear: Record<string, number>;
+            usedLeaves?: Array<{ startDate: string, endDate: string, days: number, reason?: string, location?: string, tradedWith?: string, manager?: string, title?: string }>;
+        }> = [];
 
         for (const item of json.data) {
             const rawName = String(item.fullName ?? "").trim();
@@ -65,6 +72,15 @@ export async function POST(request: Request) {
                 leavesByYear = item.leavesByYear;
             }
 
+            let usedLeaves: any[] = [];
+            if (typeof item.usedLeavesJson === "string" && item.usedLeavesJson.startsWith("[")) {
+                try {
+                    usedLeaves = JSON.parse(item.usedLeavesJson);
+                } catch { /* empty */ }
+            } else if (Array.isArray(item.usedLeaves)) {
+                usedLeaves = item.usedLeaves;
+            }
+
             const hireDate = item.entryDate ? parseStandardDate(String(item.entryDate)) : null;
 
             importDataPayload.push({
@@ -72,7 +88,8 @@ export async function POST(request: Request) {
                 jobTitle,
                 phone,
                 hireDate: hireDate ? hireDate.toISOString() : null,
-                leavesByYear
+                leavesByYear,
+                usedLeaves
             });
         }
 

@@ -31,7 +31,10 @@ export const apiService = {
         fullName: "asc",
       },
       include: {
-        balances: true
+        balances: true,
+        leaves: {
+            orderBy: { startDate: "asc" }
+        }
       }
     });
 
@@ -57,7 +60,20 @@ export const apiService = {
       const leaveDetailsJson = JSON.stringify(leavesByYear);
 
       const totalDays = years.reduce((acc, curr) => acc + curr.days, 0);
+
+      const usedLeaves = user.leaves.map(l => ({
+          startDate: l.startDate.toISOString(),
+          endDate: l.endDate.toISOString(),
+          days: l.days,
+          reason: l.reason || "",
+          location: l.location || "",
+          tradedWith: l.tradedWith || "",
+          manager: l.manager || "",
+          title: l.title || ""
+      }));
       
+      const usedLeavesJson = usedLeaves.length > 0 ? JSON.stringify(usedLeaves) : "-";
+
       return {
         no: index + 1,
         fullName: user.fullName ? user.fullName.toUpperCase() : "BİLİNMİYOR",
@@ -65,6 +81,8 @@ export const apiService = {
         phone: user.phone || "-",
         leaveDetails: leaveDetailsJson !== "{}" ? leaveDetailsJson : "-", // Standard JSON format string for easily parsing
         leaveDetailsText, // Human readable text format for Excel if needed
+        usedLeaves,
+        usedLeavesJson,
         leavesByYear,
         totalDays,
         entryDate: formatEntryDateNumeric(user.hireDate),
@@ -75,7 +93,14 @@ export const apiService = {
     return data;
   },
 
-  async importData(importedUsers: Array<{ fullName: string; jobTitle?: string | null; phone?: string | null; hireDate: string | null; leavesByYear: Record<string, number> }>) {
+  async importData(importedUsers: Array<{ 
+      fullName: string; 
+      jobTitle?: string | null; 
+      phone?: string | null; 
+      hireDate: string | null; 
+      leavesByYear: Record<string, number>;
+      usedLeaves?: Array<{ startDate: string, endDate: string, days: number, reason?: string, location?: string, tradedWith?: string, manager?: string, title?: string }>;
+  }>) {
     let createdCount = 0;
     let updatedCount = 0;
     let errorCount = 0;
@@ -140,6 +165,25 @@ export const apiService = {
                         usedDays: 0
                     }
                 });
+            }
+
+            if (row.usedLeaves && Array.isArray(row.usedLeaves) && row.usedLeaves.length > 0) {
+                await db.leaveAllocation.deleteMany({ where: { leave: { userId: user.id } } });
+                await db.leave.deleteMany({ where: { userId: user.id } });
+
+                const leaveInserts = row.usedLeaves.map(ul => ({
+                    userId: user.id,
+                    startDate: new Date(ul.startDate),
+                    endDate: new Date(ul.endDate),
+                    days: ul.days,
+                    location: ul.location || null,
+                    reason: ul.reason || null,
+                    tradedWith: ul.tradedWith || null,
+                    manager: ul.manager || null,
+                    title: ul.title || null
+                }));
+
+                await db.leave.createMany({ data: leaveInserts });
             }
         } catch (e: any) {
             errorCount++;

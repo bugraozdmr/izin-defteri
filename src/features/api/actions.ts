@@ -14,7 +14,14 @@ export async function getExportDataAction() {
     }
 }
 
-export async function importDataAction(importedUsers: Array<{ fullName: string; jobTitle?: string | null; phone?: string | null; hireDate: string | null; leavesByYear: Record<string, number> }>) {
+export async function importDataAction(importedUsers: Array<{ 
+    fullName: string; 
+    jobTitle?: string | null; 
+    phone?: string | null; 
+    hireDate: string | null; 
+    leavesByYear: Record<string, number>;
+    usedLeaves?: Array<{ startDate: string, endDate: string, days: number, reason?: string, location?: string, tradedWith?: string, manager?: string, title?: string }>;
+}>) {
     try {
         const result = await apiService.importData(importedUsers);
         if (result.createdCount > 0 || result.updatedCount > 0) {

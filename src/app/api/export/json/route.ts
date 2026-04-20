@@ -18,6 +18,7 @@ export async function GET() {
             phone: item.phone,
 			leaveDetails: item.leaveDetails,
 			leavesByYear: item.leavesByYear,
+			usedLeaves: item.usedLeaves,
 			total: item.totalDays,
 			entryDate: item.entryDate,
 		}));
