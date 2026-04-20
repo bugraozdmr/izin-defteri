@@ -97,8 +97,8 @@ export default function AdminUserPage() {
       </div>
 
       <div className="reveal reveal-1 rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-[0_14px_34px_-20px_rgba(2,6,23,0.5)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/65 sm:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 lg:gap-6">
+          <div className="flex-shrink-0">
             <h1 className="mt-1 flex items-center gap-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-3xl">
               <ClipboardList className="h-7 w-7 text-sky-500" />
               Personel Yönetimi
@@ -108,8 +108,8 @@ export default function AdminUserPage() {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full lg:w-auto">
-            <div className="group relative w-full sm:w-64">
+          <div className="flex flex-col md:flex-row items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
+            <div className="group relative w-full md:w-56 xl:w-64 flex-shrink-0">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-sky-500" />
               <input
                 type="text"
@@ -120,17 +120,32 @@ export default function AdminUserPage() {
               />
             </div>
 
-            <div className="flex w-full sm:w-auto items-center gap-2">
-              <button onClick={() => setIsImportOpen(true)} className="flex-1 sm:flex-none inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm hover:bg-slate-50 hover:text-sky-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                <Upload className="h-4 w-4" /> <span className="hidden sm:inline">İçe Aktar</span>
+            <div className="grid grid-cols-2 sm:flex sm:flex-row w-full lg:w-auto items-center gap-2">
+              <button 
+                onClick={() => setIsImportOpen(true)} 
+                title="İçe Aktar"
+                className="col-span-1 inline-flex justify-center items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold shadow-sm hover:bg-slate-50 hover:text-sky-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap"
+              >
+                <Upload className="h-4 w-4 shrink-0" /> 
+                <span className="sm:hidden xl:inline">İçe Aktar</span>
               </button>
 
-              <button onClick={() => setIsExportOpen(true)} className="flex-1 sm:flex-none inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm hover:bg-slate-50 hover:text-sky-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                <Download className="h-4 w-4" /> <span className="hidden sm:inline">Dışa Aktar</span>
+              <button 
+                onClick={() => setIsExportOpen(true)} 
+                title="Dışa Aktar"
+                className="col-span-1 inline-flex justify-center items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold shadow-sm hover:bg-slate-50 hover:text-sky-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap"
+              >
+                <Download className="h-4 w-4 shrink-0" /> 
+                <span className="sm:hidden xl:inline">Dışa Aktar</span>
               </button>
 
-              <button onClick={handleOpenCreate} className="flex-1 sm:flex-none inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-105 active:scale-95">
-                <UserPlus className="h-4 w-4" /> <span className="hidden sm:inline">Yeni Ekle</span>
+              <button 
+                onClick={handleOpenCreate} 
+                title="Yeni Ekle"
+                className="col-span-2 sm:col-auto w-full sm:w-auto inline-flex justify-center items-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-105 active:scale-95 whitespace-nowrap"
+              >
+                <UserPlus className="h-4 w-4 shrink-0" /> 
+                <span className="sm:hidden xl:inline">Yeni Ekle</span>
               </button>
             </div>
           </div>

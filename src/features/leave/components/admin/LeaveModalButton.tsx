@@ -35,8 +35,9 @@ export default function LeaveModalButton({ userId, className, compact = false }:
   const [location, setLocation] = useState("");
   const [reason, setReason] = useState("");
   const [tradedWith, setTradedWith] = useState("");
-  const [manager, setManager] = useState("");
-  const [title, setTitle] = useState("");
+  const [manager, setManager] = useState("M. Kübra KAHRAMAN");
+  const [title, setTitle] = useState("Müdür");
+  const [isCustomManagerOpen, setIsCustomManagerOpen] = useState(false);
 
   const substituteDropdownRef = useRef<HTMLDivElement | null>(null);
   const substituteButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -209,8 +210,9 @@ export default function LeaveModalButton({ userId, className, compact = false }:
     setLocation("");
     setReason("");
     setTradedWith("");
-    setManager("");
-    setTitle("");
+    setManager("M. Kübra KAHRAMAN");
+    setTitle("Müdür");
+    setIsCustomManagerOpen(false);
 
     setIsNameOpen(false);
     setNameSearch("");
@@ -344,7 +346,7 @@ export default function LeaveModalButton({ userId, className, compact = false }:
               />
             </div>
 
-            <div>
+            { /* <div>
               <label className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">İzin Nedeni</label>
               <input
                 value={reason}
@@ -352,7 +354,7 @@ export default function LeaveModalButton({ userId, className, compact = false }:
                 placeholder="Örn: Yıllık izin"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
               />
-            </div>
+            </div> */}
 
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Yerine Görev Alacak</label>
@@ -455,25 +457,53 @@ export default function LeaveModalButton({ userId, className, compact = false }:
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Onaylayan</label>
-                <input
-                  value={manager}
-                  onChange={(e) => setManager(e.target.value)}
-                  placeholder="Ad Soyad"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                />
+            <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Onay Makamı</p>
+                  {!isCustomManagerOpen && (
+                    <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {manager || "-"} <span className="font-normal text-slate-500">{title ? `(${title})` : ""}</span>
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isCustomManagerOpen) {
+                      setManager("M. Kübra KAHRAMAN");
+                      setTitle("Müdür");
+                    }
+                    setIsCustomManagerOpen(!isCustomManagerOpen);
+                  }}
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  {isCustomManagerOpen ? "Vazgeç" : "Vekalet / Değiştir"}
+                </button>
               </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Ünvan</label>
-                <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Örn: Müdür"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                />
-              </div>
+
+              {isCustomManagerOpen && (
+                <div className="mt-3 grid grid-cols-1 gap-3 border-t border-slate-100 pt-3 dark:border-slate-800 sm:grid-cols-2 animate-in fade-in slide-in-from-top-1">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Onaylayan</label>
+                    <input
+                      value={manager}
+                      onChange={(e) => setManager(e.target.value)}
+                      placeholder="Ad Soyad"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Ünvan</label>
+                    <input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Örn: Müdür"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

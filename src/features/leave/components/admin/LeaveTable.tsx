@@ -600,7 +600,20 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Onaylayan</label>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Onaylayan</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManager("M. Kübra KAHRAMAN");
+                      setTitle("Müdür");
+                    }}
+                    className="text-[10px] font-semibold text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"
+                    title="M. Kübra KAHRAMAN - Müdür olarak ayarla"
+                  >
+                    Varsayılan Yap
+                  </button>
+                </div>
                 <input
                   value={manager}
                   onChange={(e) => setManager(e.target.value)}
@@ -608,7 +621,7 @@ export default function LeaveTable({ userId, user, balances, leaves }: LeaveTabl
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Ünvan</label>
+                <label className="mb-1.5 block text-xs font-semibold mt-1 text-slate-600 dark:text-slate-300">Ünvan</label>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
